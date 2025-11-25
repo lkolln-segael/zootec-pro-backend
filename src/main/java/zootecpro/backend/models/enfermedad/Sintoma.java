@@ -4,17 +4,14 @@ import java.util.UUID;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
 @Entity
-public class Tratamiento {
+public class Sintoma {
   @Id
   private UUID id;
   private String nombre;
-  @OneToOne
-  private TipoTratamiento tipoTratamiento;
 }
