@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
@@ -18,6 +19,7 @@ import lombok.Data;
 })
 @Entity
 public class Enfermedad {
+  @Id
   public UUID id;
   private String nombre;
   @OneToOne

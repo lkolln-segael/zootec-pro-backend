@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -15,6 +16,7 @@ import zootecpro.backend.models.enfermedad.Enfermedad;
 
 })
 public class Animal {
+  @Id
   private UUID id;
   private String descripcion;
   private String codigo;
