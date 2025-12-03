@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestión de Licencias</title>
+  <link rel="stylesheet" th:href="@{/css/styles.css}" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+</head>
+
+<body class="admin-body">
+  <!-- Layout principal con sidebar y contenido -->
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <div th:replace="~{sidebar/sidebar :: sidebar}"></div>
+
+    <!-- Contenido principal -->
+    <div class="main-content">
+      <!-- Header -->
+      <header class="page-header">
+        <div class="container-fluid">
+          <div class="row align-items-center">
+            <div class="col">
+              <h1 class="page-title">
+                <i class="fas fa-id-card me-3"></i>Gestión de Licencias
+              </h1>
+            </div>
+            <div class="col-auto">
+              <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLicenciaModal">
+                <i class="fas fa-plus-circle me-2"></i>Agregar Licencia
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Alertas -->
+      <div class="container-fluid mt-4">
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+          <i class="fas fa-check-circle me-2"></i>
+          <span th:text="${success}"></span>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+          <i class="fas fa-exclamation-circle me-2"></i>
+          <span th:text="${error}"></span>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      </div>
+
+      <!-- Contenido principal -->
+      <main class="page-content">
+        <div class="container-fluid">
+          <!-- Tarjeta de tabla de licencias -->
+          <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+              <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                  <i class="fas fa-list me-2"></i>Lista de Licencias
+                </h5>
+                <div class="d-flex align-items-center">
+                  <div class="input-group input-group-sm me-2" style="width: 250px;">
+                    <input type="text" class="form-control" placeholder="Buscar licencia..." id="searchInput">
+                    <button class="btn btn-outline-light" type="button">
+                      <i class="fas fa-search"></i>
+                    </button>
+                  </div>
+                  <span class="badge bg-light text-dark" th:text="${licencias.size() + ' licencias'}">0 licencias</span>
+                </div>
+              </div>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th width="25%">Nombre</th>
+                      <th width="15%">Límite Animales</th>
+                      <th width="15%">Costo</th>
+                      <th width="20%">Fecha Inicio</th>
+                      <th width="20%">Fecha Final</th>
+                      <th width="25%" class="text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr th:each="licencia : ${licencias}" class="licencia-row">
+                      <td class="fw-bold" th:text="${licencia.nombre}">Básica</td>
+                      <td>
+                        <span class="badge bg-info" th:text="${licencia.limiteAnimales}">10</span>
+                      </td>
+                      <td>
+                        <span class="text-success fw-bold"
+                          th:text="${'$' + #numbers.formatDecimal(licencia.costo, 0, 'COMMA', 2, 'POINT')}">$50.00</span>
+                      </td>
+                      <td
+                        th:text="${licencia.fechaInicio != null} ? ${#temporals.format(licencia.fechaInicio, 'dd/MM/yyyy')} : 'N/A'">
+                        01/01/2024
+                      </td>
+                      <td
+                        th:text="${licencia.fechaFinal != null} ? ${#temporals.format(licencia.fechaFinal, 'dd/MM/yyyy')} : 'N/A'">
+                        31/12/2024
+                      </td>
+                      <td>
+                        <div class="d-flex justify-content-center gap-2">
+                          <a class="btn btn-sm btn-outline-primary" th:href="'/admin/licencias/edit/' + ${licencia.id}">
+                            <i class="fas fa-edit me-1"></i>Editar
+                          </a>
+                          <button class="btn btn-sm btn-outline-danger delete-licencia" th:data-id="${licencia.id}">
+                            <i class="fas fa-trash me-1"></i>Eliminar
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    <!-- Estado vacío -->
+                    <tr th:if="${#lists.isEmpty(licencias)}">
+                      <td colspan="6" class="text-center py-5 text-muted">
+                        <i class="fas fa-id-card fa-3x mb-3 d-block"></i>
+                        <h5>No hay licencias registradas</h5>
+                        <p class="mb-0">Comience agregando una nueva licencia.</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card-footer bg-light">
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="text-muted small">
+                  Mostrando <span th:text="${licencias.size()}">0</span> de <span th:text="${licencias.size()}">0</span>
+                  licencias
+                </div>
+                <nav aria-label="Navegación de páginas">
+                  <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item disabled"><a class="page-link" href="#">Anterior</a></li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item"><a class="page-link" href="#">Siguiente</a></li>
+                  </ul>
+                </nav>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="page-footer">
+    <div class="container-fluid">
+      <p class="mb-0">&copy; 2025 Our Application. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <!-- Modal para agregar licencia -->
+  <div class="modal fade" id="addLicenciaModal" tabindex="-1" aria-labelledby="addLicenciaModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="addLicenciaModalLabel">
+            <i class="fas fa-plus-circle me-2"></i>Agregar Nueva Licencia
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form th:action="@{/admin/licencias}" method="post">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="nombre" class="form-label">Nombre de la Licencia <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="nombre" name="nombre" required
+                  placeholder="Ej: Básica, Premium, Empresarial">
+                <div class="form-text">Nombre descriptivo de la licencia</div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="limiteAnimales" class="form-label">Límite de Animales <span
+                    class="text-danger">*</span></label>
+                <input type="number" class="form-control" id="limiteAnimales" name="limiteAnimales" required min="1"
+                  max="1000" value="10">
+                <div class="form-text">Número máximo de animales permitidos</div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="costo" class="form-label">Costo Mensual <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text">$</span>
+                  <input type="number" class="form-control" id="costo" name="costo" required min="0" step="0.01"
+                    value="50.00">
+                  <span class="input-group-text">.00</span>
+                </div>
+                <div class="form-text">Costo mensual en dólares</div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="duracionMeses" class="form-label">Duración (meses) <span
+                    class="text-danger">*</span></label>
+                <select class="form-select" id="duracionMeses" name="duracionMeses" required>
+                  <option value="1">1 mes</option>
+                  <option value="3">3 meses</option>
+                  <option value="6" selected>6 meses</option>
+                  <option value="12">12 meses</option>
+                  <option value="24">24 meses</option>
+                </select>
+                <div class="form-text">Duración del contrato de licencia</div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="fechaInicio" class="form-label">Fecha de Inicio <span class="text-danger">*</span></label>
+                <input type="text" class="form-control datepicker" id="fechaInicio" name="fechaInicio" required
+                  readonly>
+                <div class="form-text">Fecha de inicio de la licencia</div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="fechaFinal" class="form-label">Fecha de Finalización <span
+                    class="text-danger">*</span></label>
+                <input type="text" class="form-control datepicker" id="fechaFinal" name="fechaFinal" required readonly>
+                <div class="form-text">Fecha de finalización de la licencia</div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="descripcion" class="form-label">Descripción</label>
+              <textarea class="form-control" id="descripcion" name="descripcion" rows="3"
+                placeholder="Características y beneficios de esta licencia..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar Licencia</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de confirmación para eliminar -->
+  <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title" id="deleteConfirmModalLabel">
+            <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>¿Está seguro de que desea eliminar esta licencia?</p>
+          <p class="fw-bold text-danger">Esta acción no se puede deshacer.</p>
+          <p class="text-muted small">Tenga en cuenta que esta acción podría afectar a usuarios que tengan asignada esta
+            licencia.</p>
+        </div>
+        <div class="modal-footer">
+          <form id="form-delete" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <input type="hidden" name="_method" value="delete" />
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" id="confirmDeleteBtn" class="btn btn-danger">Eliminar Licencia</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Inicializar datepickers
+      flatpickr(".datepicker", {
+        locale: "es",
+        dateFormat: "Y-m-d",
+        minDate: "today",
+        allowInput: true
+      });
+
+      // Configurar fecha de inicio y calcular fecha final automáticamente
+      const fechaInicioInput = document.getElementById('fechaInicio');
+      const fechaFinalInput = document.getElementById('fechaFinal');
+      const duracionSelect = document.getElementById('duracionMeses');
+
+      function calcularFechaFinal() {
+        if (fechaInicioInput.value && duracionSelect.value) {
+          const fechaInicio = new Date(fechaInicioInput.value);
+          const meses = parseInt(duracionSelect.value);
+
+          const fechaFinal = new Date(fechaInicio);
+          fechaFinal.setMonth(fechaFinal.getMonth() + meses);
+
+          // Formatear a YYYY-MM-DD
+          const fechaFinalStr = fechaFinal.toISOString().split('T')[0];
+          fechaFinalInput.value = fechaFinalStr;
+        }
+      }
+
+      if (fechaInicioInput && fechaFinalInput && duracionSelect) {
+        fechaInicioInput.addEventListener('change', calcularFechaFinal);
+        duracionSelect.addEventListener('change', calcularFechaFinal);
+
+        // Establecer fecha por defecto (hoy)
+        const hoy = new Date().toISOString().split('T')[0];
+        fechaInicioInput.value = hoy;
+        calcularFechaFinal();
+      }
+
+      // Búsqueda en tiempo real
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) {
+        searchInput.addEventListener('input', function () {
+          const searchText = this.value.toLowerCase();
+          const rows = document.querySelectorAll('.licencia-row');
+
+          rows.forEach(row => {
+            const nombre = row.cells[0].textContent.toLowerCase();
+            const limite = row.cells[1].textContent.toLowerCase();
+            const costo = row.cells[2].textContent.toLowerCase();
+
+            if (nombre.includes(searchText) || limite.includes(searchText) || costo.includes(searchText)) {
+              row.style.display = '';
+            } else {
+              row.style.display = 'none';
+            }
+          });
+        });
+      }
+
+      // Confirmación de eliminación
+      const deleteButtons = document.querySelectorAll('.delete-licencia');
+      const deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+      const form = document.querySelector("#form-delete");
+
+      deleteButtons.forEach(button => {
+        button.addEventListener('click', function () {
+          const licenciaId = this.getAttribute('data-id');
+          const licenciaNombre = this.closest('tr').querySelector('td:nth-child(1)').textContent;
+
+          // Actualizar mensaje del modal con el nombre de la licencia
+          const modalBody = document.querySelector('#deleteConfirmModal .modal-body');
+          modalBody.innerHTML = `
+            <p>¿Está seguro de que desea eliminar la licencia <strong>"${licenciaNombre}"</strong>?</p>
+            <p class="fw-bold text-danger">Esta acción no se puede deshacer.</p>
+            <p class="text-muted small">Tenga en cuenta que esta acción podría afectar a usuarios que tengan asignada esta licencia.</p>
+          `;
+
+          form.setAttribute('action', '/admin/licencias/delete/' + licenciaId);
+          deleteConfirmModal.show();
+        });
+      });
+
+      // Limpiar formulario cuando se cierra el modal
+      const addLicenciaModal = document.getElementById('addLicenciaModal');
+      if (addLicenciaModal) {
+        addLicenciaModal.addEventListener('hidden.bs.modal', function () {
+          document.querySelector('#addLicenciaModal form').reset();
+
+          // Restablecer fechas por defecto
+          if (fechaInicioInput && fechaFinalInput) {
+            const hoy = new Date().toISOString().split('T')[0];
+            fechaInicioInput.value = hoy;
+            calcularFechaFinal();
+          }
+        });
+      }
+
+      // Validación de formulario
+      const licenciaForm = document.querySelector('#addLicenciaModal form');
+      if (licenciaForm) {
+        licenciaForm.addEventListener('submit', function (e) {
+          const fechaInicio = new Date(document.getElementById('fechaInicio').value);
+          const fechaFinal = new Date(document.getElementById('fechaFinal').value);
+
+          if (fechaFinal <= fechaInicio) {
+            e.preventDefault();
+            alert('La fecha final debe ser posterior a la fecha de inicio');
+            document.getElementById('fechaFinal').focus();
+          }
+        });
+      }
+
+      // Feedback visual para botón de eliminación
+      const deleteForm = document.querySelector("#form-delete");
+      if (deleteForm) {
+        deleteForm.addEventListener('submit', function (e) {
+          const submitBtn = document.querySelector('#confirmDeleteBtn');
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Eliminando...';
+        });
+      }
+    });
+  </script>
+
+  <style>
+    .datepicker {
+      background-color: white;
+      cursor: pointer;
+    }
+
+    .datepicker:hover {
+      background-color: #f8f9fa;
+    }
+
+    .badge.bg-info {
+      font-size: 0.9em;
+      padding: 0.35em 0.65em;
+    }
+
+    .text-success {
+      color: #198754 !important;
+    }
+
+    .table th {
+      border-top: none;
+      border-bottom: 2px solid #dee2e6;
+    }
+
+    .table td {
+      vertical-align: middle;
+    }
+
+    .input-group-text {
+      background-color: #f8f9fa;
+    }
+  </style>
+</body>
+
+</html>

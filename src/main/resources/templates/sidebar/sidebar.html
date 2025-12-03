@@ -1,0 +1,36 @@
+<div th:fragment="sidebar" class="d-flex flex-column p-3 bg-light" style="width: 280px; height: 100vh;">
+  <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-dark text-decoration-none">
+    <span class="fs-4">Admin Panel</span>
+  </a>
+  <hr />
+  <ul class="nav nav-pills flex-column mb-auto">
+    <li class="nav-item">
+      <a href="/admin/users" th:classappend="${activePage == 'users'} ? 'active' : ''" class="nav-link"
+        aria-current="page">
+        <i class="fas fa-users me-2"></i>Usuarios
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="/admin/enfermedades/tipo" th:classappend="${activePage == 'enfermedades'} ? 'active' : ''"
+        class="nav-link">
+        <i class="fas fa-heartbeat me-2"></i>Enfermedades
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="/admin/animales/tipo" th:classappend="${activePage == 'animales'} ? 'active' : ''" class="nav-link">
+        <i class="fas fa-heartbeat me-2"></i>Animales
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="/admin/licencias" th:classappend="${activePage == 'licencias'} ? 'active' : ''" class="nav-link">
+        <i class="fas fa-id-card me-2"></i>Licencias
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="/admin/establos" th:classappend="${activePage == 'establos'} ? 'active' : ''" class="nav-link">
+        <i class="fas fa-tractor me-2"></i>Establos
+      </a>
+    </li>
+  </ul>
+  <hr />
+</div>

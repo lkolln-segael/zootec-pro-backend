@@ -45,11 +45,15 @@ public class UsuarioService implements UserDetailsService {
     log.info("Superadmin creando");
     Optional<Rol> rolOpt = this.rolRepository.findByNombre("SUPERADMIN");
     if (!rolOpt.isPresent()) {
-      Rol rol = Rol.builder()
-          .id(UUID.randomUUID())
-          .nombre("admin")
-          .permisos(List.of("READ_UsuariosAdmin",
-              "WRITE_UsuariosAdmin", "UPDATE_UsuariosAdmin", "DELETE_UsuariosAdmin"))
+      Rol rol = Rol.builder().id(UUID.randomUUID())
+          .nombre("SUPERADMIN")
+          .permisos(
+              List.of("READ_UsuariosAdmin", "WRITE_UsuariosAdmin", "UPDATE_UsuariosAdmin", "DELETE_UsuariosAdmin",
+                  "READ_Reproduccion", "WRITE_Reproduccion", "UPDATE_Reproduccion", "DELETE_Reproduccion",
+                  "READ_Crecimiento", "WRITE_Crecimiento", "UPDATE_Crecimiento", "DELETE_Crecimiento",
+                  "READ_Sanidad", "WRITE_Sanidad", "UPDATE_Sanidad", "DELETE_Sanidad",
+                  "READ_Establo", "WRITE_Establo", "UPDATE_Establo", "DELETE_Establo",
+                  "READ_Enfermedades", "WRITE_Enfermedades", "UPDATE_Enfermedades", "DELETE_Enfermedades"))
           .build();
       rolRepository.save(rol);
       rolOpt = Optional.of(rol);
@@ -126,5 +130,46 @@ public class UsuarioService implements UserDetailsService {
         .rol(rol)
         .build();
     repository.save(usuario);
+  }
+
+  public List<Usuario> getAllUsers() {
+    return repository.findAll();
+  }
+
+  public Usuario getUsuarioById(UUID id) throws UsernameNotFoundException {
+    Optional<Usuario> usuarioOpt = repository.findById(id);
+    if (usuarioOpt.isPresent()) {
+      return usuarioOpt.get();
+    } else {
+      throw new UsernameNotFoundException("Usuario no encontrado");
+    }
+  }
+
+  public boolean updateUsuario(UUID id, InsertUsuario usuario) {
+    Optional<Usuario> usuarioOpt = repository.findById(id);
+    if (!usuarioOpt.isPresent()) {
+      return false;
+    }
+    usuarioOpt.get().setNombre(usuario.nombre);
+    usuarioOpt.get().setNombreUsuario(usuario.nombreUsuario);
+    usuarioOpt.get().setContraseña(encryptPassword(usuario.contraseña));
+    usuarioOpt.get().setRol(
+        rolRepository.findByNombre(usuario.rol.isPresent() ? usuario.rol.get().name() : "OPERARIO").orElse(null));
+    usuarioOpt.get().setCorreo(usuario.correo);
+    usuarioOpt.get().setFechaModificacion(usuario.fechaModificacion);
+    usuarioOpt.get().setActivo(usuario.activo);
+    usuarioOpt.get().setFechaCreacion(usuario.fechaCreacion);
+    usuarioOpt.get().setUltimoAcceso(null);
+    repository.save(usuarioOpt.get());
+    return true;
+  }
+
+  public boolean deleteUsuario(UUID id) {
+    Optional<Usuario> usuarioOpt = repository.findById(id);
+    if (!usuarioOpt.isPresent()) {
+      return false;
+    }
+    repository.deleteById(id);
+    return true;
   }
 }

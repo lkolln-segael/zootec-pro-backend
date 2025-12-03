@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agregar Animal</title>
+  <link rel="stylesheet" th:href="@{/css/styles.css}" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+</head>
+
+<body class="admin-body">
+  <!-- Layout principal con sidebar y contenido -->
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <div th:replace="~{sidebar/sidebar :: sidebar}"></div>
+
+    <!-- Contenido principal -->
+    <div class="main-content">
+      <!-- Header -->
+      <header class="page-header">
+        <div class="container-fluid">
+          <div class="row align-items-center">
+            <div class="col">
+              <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                  <li class="breadcrumb-item">
+                    <a th:href="@{/admin}" class="text-decoration-none">
+                      <i class="fas fa-home"></i> Inicio
+                    </a>
+                  </li>
+                  <li class="breadcrumb-item">
+                    <a th:href="@{/admin/animales}" class="text-decoration-none">
+                      <i class="fas fa-paw"></i> Animales
+                    </a>
+                  </li>
+                  <li class="breadcrumb-item active" aria-current="page">
+                    <i class="fas fa-plus-circle"></i> Editar Animal
+                  </li>
+                </ol>
+              </nav>
+              <h1 class="page-title mt-2">
+                <i class="fas fa-plus-circle me-3"></i>Editar Animal
+              </h1>
+            </div>
+            <div class="col-auto">
+              <a th:href="@{/admin/animales}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Volver a Animales
+              </a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Alertas -->
+      <div class="container-fluid mt-4">
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+          <i class="fas fa-check-circle me-2"></i>
+          <span th:text="${success}"></span>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+          <i class="fas fa-exclamation-circle me-2"></i>
+          <span th:text="${error}"></span>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      </div>
+
+      <!-- Contenido principal -->
+      <main class="page-content">
+        <div class="container-fluid">
+          <div class="row justify-content-center">
+            <div class="col-lg-10">
+              <!-- Tarjeta de formulario -->
+              <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                  <h5 class="card-title mb-0">
+                    <i class="fas fa-paw me-2"></i>Información del Animal
+                  </h5>
+                </div>
+                <div class="card-body">
+                  <form th:action="@{/admin/animales/edit} + '/' + ${animal.id.toString()} + '?establoId='+${establoId}"
+                    method="post" id="addAnimalForm">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <input type="hidden" name="_method" value="put" />
+
+                    <!-- Información básica -->
+                    <div class="row mb-4">
+                      <div class="col-12">
+                        <h6 class="border-bottom pb-2 mb-3">
+                          <i class="fas fa-info-circle me-2"></i>Información Básica
+                        </h6>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="codigo" class="form-label">Código <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="codigo" name="codigo" required
+                          placeholder="Ej: AN-001, VACA-001" th:value="${animal?.codigo}">
+                        <div class="form-text">Código único para identificar al animal</div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="descripcion" class="form-label">Descripción <span
+                            class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="descripcion" name="descripcion" required
+                          placeholder="Ej: Vaca Holstein, Toro Angus" th:value="${animal?.descripcion}">
+                        <div class="form-text">Descripción breve del animal</div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="identificadorElectronico" class="form-label">Identificador Electrónico</label>
+                        <input type="text" class="form-control" id="identificadorElectronico"
+                          name="identificadorElectronico" placeholder="Ej: RFID-123456"
+                          th:value="${animal?.identificadorElectronico}">
+                        <div class="form-text">Código de chip RFID o identificación electrónica</div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="otroIdentificador" class="form-label">Otro Identificador</label>
+                        <input type="text" class="form-control" id="otroIdentificador" name="otroIdentificador"
+                          placeholder="Ej: Tatuaje, Arete" th:value="${animal?.otroIdentificador}">
+                        <div class="form-text">Otra forma de identificación (tatuaje, arete, etc.)</div>
+                      </div>
+                    </div>
+
+                    <!-- Características del animal -->
+                    <div class="row mb-4">
+                      <div class="col-12">
+                        <h6 class="border-bottom pb-2 mb-3">
+                          <i class="fas fa-dna me-2"></i>Características
+                        </h6>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="proposito" class="form-label">Propósito <span class="text-danger">*</span></label>
+                        <select class="form-select" id="proposito" name="proposito" required>
+                          <option value="">Seleccionar propósito</option>
+                          <option th:each="prop : ${propositos}" th:value="${prop}" th:text="${prop}"
+                            th:selected="${animal?.proposito == prop}">
+                          </option>
+                        </select>
+                        <div class="form-text">Propósito principal del animal (leche, carne, cría, etc.)</div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="color" class="form-label">Color</label>
+                        <input type="text" class="form-control" id="color" name="color"
+                          placeholder="Ej: Blanco y negro, Marrón, Negro" th:value="${animal?.color}">
+                        <div class="form-text">Color principal del animal</div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="fechaNacimiento" class="form-label">Fecha de Nacimiento</label>
+                        <input type="datetime-local" class="form-control" id="fechaNacimiento" name="fechaNacimiento"
+                          th:value="${animal?.fechaNacimiento}">
+                        <div class="form-text">Fecha y hora aproximada de nacimiento</div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <div class="card bg-light h-100">
+                          <div class="card-body p-3">
+                            <small class="text-muted d-block mb-2">
+                              <i class="fas fa-calculator me-1"></i>Edad estimada
+                            </small>
+                            <div id="edadCalculada" class="text-muted">
+                              Ingrese la fecha de nacimiento para calcular la edad
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="idTipoAnimal" class="form-label">Tipo animal <span
+                            class="text-danger">*</span></label>
+                        <select class="form-select" id="idTipoAnimal" name="idTipoAnimal" required>
+                          <option value="">Seleccionar tipo del animal</option>
+                          <option th:each="tipo : ${tiposAnimal}" th:value="${tipo.id}" th:text="${tipo.nombre}">
+                          </option>
+                        </select>
+                        <div class="form-text">Tipos del animal, Ternero, Vaca, etc.</div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="genero" class="form-label">Genero <span class="text-danger">*</span></label>
+                        <select class="form-select" id="genero" name="genero" required>
+                          <option value="">Seleccionar genero del animal</option>
+                          <option value="HEMBRA"> HEMBRA</option>
+                          <option value="MACHO"> MACHO </option>
+                        </select>
+                        <div class="form-text">Tipos del animal, Ternero, Vaca, etc.</div>
+                      </div>
+                    </div>
+
+                    <!-- Parentesco -->
+                    <div class="row mb-4">
+                      <div class="col-12">
+                        <h6 class="border-bottom pb-2 mb-3">
+                          <i class="fas fa-family-tree me-2"></i>Parentesco
+                        </h6>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="padre" class="form-label">Padre</label>
+                        <select class="form-select" id="idPadre" name="padre">
+                          <option value="">Seleccionar padre (opcional)</option>
+                          <option th:each="animalPadre : ${animales}" th:value="${animalPadre.id}"
+                            th:text="${animalPadre.codigo} + ' - ' + ${animalPadre.descripcion}"
+                            th:selected="${animal?.padre != null and animal.padre.id == animalPadre.id}">
+                          </option>
+                        </select>
+                        <div class="form-text">Animal padre (semental)</div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="madre" class="form-label">Madre</label>
+                        <select class="form-select" id="idMadre" name="madre">
+                          <option value="">Seleccionar madre (opcional)</option>
+                          <option th:each="animalMadre : ${animales}" th:value="${animalMadre.id}"
+                            th:text="${animalMadre.codigo} + ' - ' + ${animalMadre.descripcion}"
+                            th:selected="${animal?.madre != null and animal.madre.id == animalMadre.id}">
+                          </option>
+                        </select>
+                        <div class="form-text">Animal madre</div>
+                      </div>
+                      <div class="col-12">
+                        <div class="alert alert-info small">
+                          <i class="fas fa-info-circle me-2"></i>
+                          <strong>Nota:</strong> El parentesco ayuda a llevar un registro genealógico y puede ser útil
+                          para programas de cría y mejoramiento genético.
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Enfermedades -->
+                    <div class="row mb-4">
+                      <div class="col-12">
+                        <h6 class="border-bottom pb-2 mb-3">
+                          <i class="fas fa-heartbeat me-2"></i>Historial de Salud
+                        </h6>
+                      </div>
+                      <div class="col-md-12 mb-3">
+                        <label for="enfermedades" class="form-label">Enfermedades Registradas</label>
+                        <select class="form-select" id="enfermedades" name="enfermedades" multiple size="4">
+                          <option th:each="enfermedad : ${enfermedades}" th:value="${enfermedad.id}"
+                            th:text="${enfermedad.nombre} + ' (' + ${enfermedad.tipo} + ')'">
+                          </option>
+                        </select>
+                        <div class="form-text">
+                          Mantenga presionada la tecla Ctrl (o Cmd en Mac) para seleccionar múltiples enfermedades.
+                          Este campo es opcional.
+                        </div>
+                      </div>
+                      <div class="col-12">
+                        <div class="alert alert-warning small">
+                          <i class="fas fa-exclamation-triangle me-2"></i>
+                          <strong>Importante:</strong> El registro de enfermedades es fundamental para el manejo
+                          sanitario del animal.
+                          Si no encuentra una enfermedad en la lista, puede crearla desde el módulo de salud.
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Observaciones adicionales -->
+                    <div class="row mb-4">
+                      <div class="col-12">
+                        <h6 class="border-bottom pb-2 mb-3">
+                          <i class="fas fa-sticky-note me-2"></i>Observaciones Adicionales
+                        </h6>
+                      </div>
+                      <div class="col-md-12 mb-3">
+                        <label for="observaciones" class="form-label">Observaciones</label>
+                        <textarea class="form-control" id="observaciones" name="observaciones" rows="4"
+                          placeholder="Notas adicionales sobre el animal..."></textarea>
+                        <div class="form-text">Cualquier información adicional relevante sobre el animal</div>
+                      </div>
+                    </div>
+
+                    <!-- Botones de acción -->
+                    <div class="d-flex justify-content-between align-items-center border-top pt-4">
+                      <div>
+                        <a th:href="@{/admin/animales}" class="btn btn-outline-secondary">
+                          <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                      </div>
+                      <div>
+                        <button type="reset" class="btn btn-warning me-2">
+                          <i class="fas fa-redo me-2"></i>Limpiar Formulario
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="submitButton">
+                          <i class="fas fa-save me-2"></i>Guardar Animal
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="page-footer">
+    <div class="container-fluid">
+      <p class="mb-0">&copy; 2025 Our Application. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Calcular edad a partir de la fecha de nacimiento
+      const fechaNacimientoInput = document.getElementById('fechaNacimiento');
+      const edadCalculada = document.getElementById('edadCalculada');
+
+      function calcularEdad() {
+        if (fechaNacimientoInput.value) {
+          const fechaNacimiento = new Date(fechaNacimientoInput.value);
+          const ahora = new Date();
+
+          let años = ahora.getFullYear() - fechaNacimiento.getFullYear();
+          let meses = ahora.getMonth() - fechaNacimiento.getMonth();
+          let dias = ahora.getDate() - fechaNacimiento.getDate();
+
+          // Ajustar si el mes/día actual es menor que el de nacimiento
+          if (meses < 0 || (meses === 0 && dias < 0)) {
+            años--;
+            meses += 12;
+          }
+
+          if (dias < 0) {
+            const ultimoMes = new Date(ahora.getFullYear(), ahora.getMonth(), 0);
+            dias += ultimoMes.getDate();
+            meses--;
+          }
+
+          let edadTexto = '';
+          if (años > 0) {
+            edadTexto += años + ' año' + (años > 1 ? 's' : '');
+            if (meses > 0) {
+              edadTexto += ', ' + meses + ' mes' + (meses > 1 ? 'es' : '');
+            }
+          } else if (meses > 0) {
+            edadTexto += meses + ' mes' + (meses > 1 ? 'es' : '');
+            if (dias > 0) {
+              edadTexto += ', ' + dias + ' día' + (dias > 1 ? 's' : '');
+            }
+          } else {
+            edadTexto = dias + ' día' + (dias > 1 ? 's' : '');
+          }
+
+          edadCalculada.innerHTML = `
+            <div class="fw-bold text-primary">${edadTexto}</div>
+            <small class="text-muted">
+              Nacido el ${fechaNacimiento.toLocaleDateString('es-ES')}
+            </small>
+          `;
+        } else {
+          edadCalculada.innerHTML = 'Ingrese la fecha de nacimiento para calcular la edad';
+        }
+      }
+
+      if (fechaNacimientoInput) {
+        fechaNacimientoInput.addEventListener('change', calcularEdad);
+      }
+
+      // Mostrar información del establo seleccionado
+      const establoSelect = document.getElementById('establo');
+      const establoDetalles = document.getElementById('establoDetalles');
+      const ocupacionEstablo = document.getElementById('ocupacionEstablo');
+      const ocupacionBar = document.getElementById('ocupacionBar');
+
+      // Datos de establos (se pueden pasar desde el servidor en un atributo data)
+      const establosData = [
+        <th:block th:each="est : ${establos}">
+          {
+            id: '<span th:text="${est.id}"></span>',
+          nombre: '<span th:text="${est.nombre}"></span>',
+          capacidad: <span th:text="${est.capacidadMaxima}"></span>,
+          ocupacion: <span th:text="${est.animales != null ? est.animales.size() : 0}"></span>,
+          sistema: '<span th:text="${est.sistemaProduccion}"></span>',
+          ubicacion: '<span th:text="${est.ubicacion}"></span>'
+          },
+        </th:block>
+      ];
+
+      function actualizarInfoEstablo() {
+        const establoId = establoSelect.value;
+        const establo = establosData.find(e => e.id === establoId);
+
+        if (establo) {
+          const capacidad = establo.capacidad;
+          const ocupacion = establo.ocupacion;
+          const porcentajeOcupacion = capacidad > 0 ? Math.round((ocupacion / capacidad) * 100) : 0;
+          const disponibles = capacidad - ocupacion;
+
+          // Actualizar detalles del establo
+          establoDetalles.innerHTML = `
+            <div class="fw-bold">${establo.nombre}</div>
+            <div class="small">
+              <i class="fas fa-industry me-1"></i> ${establo.sistema}<br>
+              <i class="fas fa-map-marker-alt me-1"></i> ${establo.ubicacion}
+            </div>
+          `;
+
+          // Actualizar ocupación
+          ocupacionEstablo.innerHTML = `
+            <div class="d-flex justify-content-between">
+              <span>Ocupación:</span>
+              <span class="fw-bold">${ocupacion} / ${capacidad}</span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span>Disponible:</span>
+              <span class="fw-bold text-success">${disponibles}</span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span>Porcentaje:</span>
+              <span class="fw-bold">${porcentajeOcupacion}%</span>
+            </div>
+          `;
+
+          // Actualizar barra de progreso
+          ocupacionBar.style.width = `${porcentajeOcupacion}%`;
+          ocupacionBar.setAttribute('aria-valuenow', porcentajeOcupacion);
+
+          // Cambiar color según porcentaje
+          if (porcentajeOcupacion >= 90) {
+            ocupacionBar.className = 'progress-bar bg-danger';
+          } else if (porcentajeOcupacion >= 70) {
+            ocupacionBar.className = 'progress-bar bg-warning';
+          } else {
+            ocupacionBar.className = 'progress-bar bg-success';
+          }
+
+          // Advertencia si el establo está casi lleno
+          if (disponibles <= 2) {
+            const establoInfo = document.getElementById('establoInfo');
+            establoInfo.innerHTML = `
+              <div class="alert alert-warning alert-dismissible fade show py-2 mt-2" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Advertencia:</strong> El establo tiene muy poca capacidad disponible (${disponibles} espacios).
+                <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            `;
+          }
+        } else {
+          establoDetalles.innerHTML = 'Seleccione un establo para ver sus detalles';
+          ocupacionEstablo.innerHTML = '-- / --';
+          ocupacionBar.style.width = '0%';
+          ocupacionBar.className = 'progress-bar';
+        }
+      }
+
+      if (establoSelect) {
+        establoSelect.addEventListener('change', actualizarInfoEstablo);
+
+        // Inicializar con el primer establo si hay uno seleccionado
+        if (establoSelect.value) {
+          actualizarInfoEstablo();
+        }
+      }
+
+      // Validación del formulario
+      const addAnimalForm = document.getElementById('addAnimalForm');
+      const submitButton = document.getElementById('submitButton');
+
+      if (addAnimalForm) {
+        addAnimalForm.addEventListener('submit', function (e) {
+          let isValid = true;
+          let errorMessage = '';
+
+          // Validar código (único)
+          const codigo = document.getElementById('codigo').value.trim();
+          if (!codigo) {
+            isValid = false;
+            errorMessage = 'El código del animal es requerido';
+          }
+
+          // Validar descripción
+          const descripcion = document.getElementById('descripcion').value.trim();
+          if (!descripcion) {
+            isValid = false;
+            errorMessage = 'La descripción del animal es requerida';
+          }
+
+          // Validar propósito
+          const proposito = document.getElementById('proposito').value;
+          if (!proposito) {
+            isValid = false;
+            errorMessage = 'El propósito del animal es requerido';
+          }
+
+          // Validar establo
+          const establo = document.getElementById('establo').value;
+          if (!establo) {
+            isValid = false;
+            errorMessage = 'Debe seleccionar un establo para el animal';
+          }
+
+          // Validar padre y madre no sean el mismo animal
+          const padre = document.getElementById('padre').value;
+          const madre = document.getElementById('madre').value;
+          if (padre && madre && padre === madre) {
+            isValid = false;
+            errorMessage = 'El padre y la madre no pueden ser el mismo animal';
+          }
+
+          if (!isValid) {
+            e.preventDefault();
+            alert('Error: ' + errorMessage);
+          } else {
+            // Cambiar texto del botón mientras se procesa
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Guardando...';
+          }
+        });
+      }
+
+      // Formatear automáticamente el código
+      const codigoInput = document.getElementById('codigo');
+      if (codigoInput) {
+        codigoInput.addEventListener('blur', function () {
+          let codigo = this.value.trim().toUpperCase();
+          // Agregar prefijo si no lo tiene
+          if (codigo && !codigo.includes('-')) {
+            // Intentar detectar tipo por descripción
+            const descripcion = document.getElementById('descripcion').value.toLowerCase();
+            if (descripcion.includes('vaca') || descripcion.includes('toro') ||
+              descripcion.includes('novillo') || descripcion.includes('ternero')) {
+              codigo = 'BOV-' + codigo;
+            } else if (descripcion.includes('cerdo') || descripcion.includes('porcino')) {
+              codigo = 'POR-' + codigo;
+            } else if (descripcion.includes('oveja') || descripcion.includes('cordero')) {
+              codigo = 'OVI-' + codigo;
+            } else {
+              codigo = 'AN-' + codigo;
+            }
+            this.value = codigo;
+          }
+        });
+      }
+
+      // Prevenir envío con Enter en campos de texto
+      const textInputs = document.querySelectorAll('input[type="text"]');
+      textInputs.forEach(input => {
+        input.addEventListener('keypress', function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+          }
+        });
+      });
+
+      // Mostrar advertencia si se intenta salir sin guardar
+      let formChanged = false;
+      const formInputs = document.querySelectorAll('#addAnimalForm input, #addAnimalForm textarea, #addAnimalForm select');
+
+      formInputs.forEach(input => {
+        input.addEventListener('change', function () {
+          formChanged = true;
+        });
+
+        input.addEventListener('input', function () {
+          formChanged = true;
+        });
+      });
+
+      window.addEventListener('beforeunload', function (e) {
+        if (formChanged) {
+          e.preventDefault();
+          e.returnValue = 'Tienes cambios sin guardar. ¿Seguro que quieres salir?';
+          return e.returnValue;
+        }
+      });
+
+      // Inicializar datepicker para fecha de nacimiento
+      if (fechaNacimientoInput) {
+        // Establecer fecha máxima como hoy
+        const hoy = new Date().toISOString().slice(0, 16);
+        fechaNacimientoInput.max = hoy;
+
+        // Establecer fecha por defecto (hace 1 año)
+        const haceUnAno = new Date();
+        haceUnAno.setFullYear(haceUnAno.getFullYear() - 1);
+        if (!fechaNacimientoInput.value) {
+          fechaNacimientoInput.value = haceUnAno.toISOString().slice(0, 16);
+          calcularEdad(); // Calcular edad inicial
+        }
+      }
+    });
+  </script>
+
+  <style>
+    .card {
+      border: none;
+      border-radius: 10px;
+    }
+
+    .card-header {
+      border-radius: 10px 10px 0 0 !important;
+    }
+
+    .border-bottom {
+      border-bottom: 2px solid #dee2e6 !important;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+      border-color: #86b7fe;
+      box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
+    .form-select[multiple] {
+      height: auto;
+    }
+
+    .input-group-text {
+      background-color: #f8f9fa;
+      border-color: #dee2e6;
+    }
+
+    .alert {
+      border-radius: 8px;
+      border: none;
+    }
+
+    .progress {
+      border-radius: 5px;
+    }
+
+    .progress-bar {
+      border-radius: 5px;
+      transition: width 0.3s ease;
+    }
+
+    .border-top {
+      border-top: 2px solid #dee2e6 !important;
+    }
+
+    .page-title {
+      color: #2c3e50;
+      font-weight: 600;
+    }
+
+    .breadcrumb {
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .breadcrumb-item.active {
+      color: #6c757d;
+    }
+
+    .form-label {
+      font-weight: 500;
+    }
+
+    .form-text {
+      font-size: 0.85em;
+    }
+
+    .fa-paw {
+      color: #FF6B6B;
+    }
+
+    .fa-dna {
+      color: #6f42c1;
+    }
+
+    .fa-family-tree {
+      color: #20c997;
+    }
+
+    .fa-haykal {
+      color: #8B4513;
+    }
+
+    .fa-heartbeat {
+      color: #dc3545;
+    }
+
+    .fa-sticky-note {
+      color: #fd7e14;
+    }
+
+    .bg-light {
+      background-color: #f8f9fa !important;
+    }
+
+    .btn-close-sm {
+      padding: 0.25rem;
+      font-size: 0.75rem;
+    }
+
+    .btn-warning {
+      background-color: #ffc107;
+      border-color: #ffc107;
+      color: #212529;
+    }
+
+    .btn-warning:hover {
+      background-color: #ffca2c;
+      border-color: #ffc720;
+      color: #212529;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    /* Estilo para campos requeridos */
+    .form-label span.text-danger {
+      font-weight: bold;
+    }
+  </style>
+</body>
+
+</html>

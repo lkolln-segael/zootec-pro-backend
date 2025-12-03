@@ -2,6 +2,11 @@ package zootecpro.backend.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -16,29 +21,61 @@ import zootecpro.backend.services.UsuarioService;
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
 
-  private final UsuarioService usuarioService;
-  private final JwtAuthenticationFilter jwtFilter;
+  @Configuration
+  @Order(1)
+  public static class AdminSecurityConfig {
 
-  @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http
-        .csrf(AbstractHttpConfigurer::disable)
-        .authorizeHttpRequests(authorize -> authorize
-            .requestMatchers("/", "/login", "/api/login", "/register", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-            .requestMatchers("/api/**").authenticated()
-            .anyRequest().authenticated())
-        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .formLogin(form -> form
-            .loginPage("/login") // ✅ Página personalizada
-            .loginProcessingUrl("/perform_login")
-            .defaultSuccessUrl("/dashboard", true)
-            .permitAll())
-        .logout(logout -> logout.permitAll());
-    return http.build();
+    @Bean
+    public SecurityFilterChain adminFilterChain(HttpSecurity http) throws Exception {
+      http
+          .securityMatcher("/admin/**")
+          .authorizeHttpRequests(authorize -> authorize
+              .requestMatchers("/admin/login", "/admin/css/**").permitAll()
+              .requestMatchers("/admin/**")
+              .hasRole("SUPERADMIN"))
+          .formLogin(form -> form
+              .loginPage("/admin/login")
+              .loginProcessingUrl("/admin/login")
+              .defaultSuccessUrl("/admin/users")
+              .failureUrl("/admin/login?error=true")
+              .permitAll())
+          .logout(logout -> logout
+              .logoutUrl("/admin/logout")
+              .logoutSuccessUrl("/admin/login?logout=true")
+              .permitAll())
+          .sessionManagement(session -> session
+              .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED));
+
+      return http.build();
+    }
+  }
+
+  @Configuration
+  @Order(2)
+  public static class ApiSecurityConfig {
+
+    private final JwtAuthenticationFilter jwtFilter;
+
+    public ApiSecurityConfig(JwtAuthenticationFilter jwtFilter) {
+      this.jwtFilter = jwtFilter;
+    }
+
+    @Bean
+    public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
+      http
+          .securityMatcher("/api/**")
+          .authorizeHttpRequests(authorize -> authorize
+              .requestMatchers("/api/login", "/api/register").permitAll()
+              .anyRequest().authenticated())
+          .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+          .sessionManagement(session -> session
+              .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+          .csrf(AbstractHttpConfigurer::disable);
+
+      return http.build();
+    }
   }
 
   @Bean

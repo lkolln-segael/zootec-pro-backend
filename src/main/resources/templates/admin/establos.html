@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestión de Establos</title>
+  <link rel="stylesheet" th:href="@{/css/styles.css}" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+
+<body class="admin-body">
+  <!-- Layout principal con sidebar y contenido -->
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <div th:replace="~{sidebar/sidebar :: sidebar}"></div>
+
+    <!-- Contenido principal -->
+    <div class="main-content">
+      <!-- Header -->
+      <header class="page-header">
+        <div class="container-fluid">
+          <div class="row align-items-center">
+            <div class="col">
+              <h1 class="page-title">
+                <i class="fas fa-haykal me-3"></i>Gestión de Establos
+              </h1>
+            </div>
+            <div class="col-auto">
+              <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEstabloModal">
+                <i class="fas fa-plus me-2"></i>Agregar Establo
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Alertas -->
+      <div class="container-fluid mt-4">
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+          <i class="fas fa-check-circle me-2"></i>
+          <span th:text="${success}"></span>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+          <i class="fas fa-exclamation-circle me-2"></i>
+          <span th:text="${error}"></span>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      </div>
+
+      <!-- Contenido principal -->
+      <main class="page-content">
+        <div class="container-fluid">
+          <!-- Tarjeta de tabla de establos -->
+          <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+              <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                  <i class="fas fa-list me-2"></i>Lista de Establos
+                </h5>
+                <div class="d-flex align-items-center">
+                  <div class="input-group input-group-sm me-2" style="width: 250px;">
+                    <input type="text" class="form-control" placeholder="Buscar establo..." id="searchInput">
+                    <button class="btn btn-outline-light" type="button">
+                      <i class="fas fa-search"></i>
+                    </button>
+                  </div>
+                  <span class="badge bg-light text-dark" th:text="${establos.size() + ' establos'}">0 establos</span>
+                </div>
+              </div>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th width="15%">Nombre</th>
+                      <th width="15%">Sistema Producción</th>
+                      <th width="10%">Capacidad</th>
+                      <th width="15%">Área Total</th>
+                      <th width="15%">Ubicación</th>
+                      <th width="15%">Responsable</th>
+                      <th width="15%" class="text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr th:each="establo : ${establos}" class="establo-row">
+                      <td class="fw-bold" th:text="${establo.nombre}">Establo Principal</td>
+                      <td>
+                        <span th:text="${establo.sistemaProduccion}">
+                          Intensivo
+                        </span>
+                      </td>
+                      <td>
+                        <span class="badge bg-secondary" th:text="${establo.capacidadMaxima}">100</span>
+                      </td>
+                      <td>
+                        <div class="d-flex flex-column">
+                          <span th:text="${establo.areaTotal} + ' m²'">5000 m²</span>
+                          <small class="text-muted" th:if="${establo.areaConstruida != null}">
+                            <i class="fas fa-building me-1"></i>
+                            <span th:text="${establo.areaConstruida}">1000</span> m² construidos
+                          </small>
+                        </div>
+                      </td>
+                      <td th:text="${establo.ubicacion}">Finca La Esperanza</td>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <i class="fas fa-user-circle me-2 text-primary"></i>
+                          <span th:text="${establo.usuario?.nombre}">Juan Pérez</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="d-flex justify-content-center gap-2">
+                          <a class="btn btn-sm btn-outline-info" th:href="'/admin/establos/view/' + ${establo.id}">
+                            <i class="fas fa-eye me-1"></i>Ver
+                          </a>
+                          <a class="btn btn-sm btn-outline-primary" th:href="'/admin/establos/edit/' + ${establo.id}">
+                            <i class="fas fa-edit me-1"></i>Editar
+                          </a>
+                          <button class="btn btn-sm btn-outline-danger delete-establo" th:data-id="${establo.id}">
+                            <i class="fas fa-trash me-1"></i>Eliminar
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    <!-- Estado vacío -->
+                    <tr th:if="${#lists.isEmpty(establos)}">
+                      <td colspan="7" class="text-center py-5 text-muted">
+                        <i class="fas fa-haykal fa-3x mb-3 d-block"></i>
+                        <h5>No hay establos registrados</h5>
+                        <p class="mb-0">Comience agregando un nuevo establo.</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card-footer bg-light">
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="text-muted small">
+                  Mostrando <span th:text="${establos.size()}">0</span> de <span th:text="${establos.size()}">0</span>
+                  establos
+                </div>
+                <nav aria-label="Navegación de páginas">
+                  <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item disabled"><a class="page-link" href="#">Anterior</a></li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item"><a class="page-link" href="#">Siguiente</a></li>
+                  </ul>
+                </nav>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="page-footer">
+    <div class="container-fluid">
+      <p class="mb-0">&copy; 2025 Our Application. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <!-- Modal para agregar establo -->
+  <div class="modal fade" id="addEstabloModal" tabindex="-1" aria-labelledby="addEstabloModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="addEstabloModalLabel">
+            <i class="fas fa-plus me-2"></i>Agregar Nuevo Establo
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form th:action="@{/admin/establos}" method="post" id="addEstabloForm">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+          <div class="modal-body">
+            <!-- Información básica -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <h6 class="border-bottom pb-2 mb-3">
+                  <i class="fas fa-info-circle me-2"></i>Información Básica
+                </h6>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="nombre" class="form-label">Nombre del Establo <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="nombre" name="nombre" required
+                  placeholder="Ej: Establo Principal, Establo Secundario">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="sistemaProduccion" class="form-label">Sistema de Producción <span
+                    class="text-danger">*</span></label>
+                <select class="form-select" id="sistemaProduccion" name="sistemaProduccion" required>
+                  <option value="">Seleccionar sistema</option>
+                  <option th:each="sistema : ${sistemasProduccion}" th:value="${sistema}" th:text="${sistema}">
+                  </option>
+                </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="capacidadMaxima" class="form-label">Capacidad Máxima <span
+                    class="text-danger">*</span></label>
+                <div class="input-group">
+                  <input type="number" class="form-control" id="capacidadMaxima" name="capacidadMaxima" required min="1"
+                    max="10000" placeholder="Ej: 100">
+                  <span class="input-group-text">animales</span>
+                </div>
+                <div class="form-text">Número máximo de animales que puede albergar</div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="ubicacion" class="form-label">Ubicación</label>
+                <input type="text" class="form-control" id="ubicacion" name="ubicacion"
+                  placeholder="Ej: Finca La Esperanza, Sector Norte">
+              </div>
+            </div>
+
+            <!-- Áreas del establo -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <h6 class="border-bottom pb-2 mb-3">
+                  <i class="fas fa-ruler-combined me-2"></i>Distribución de Áreas (m²)
+                </h6>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="areaTotal" class="form-label">Área Total <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <input type="number" class="form-control" id="areaTotal" name="areaTotal" required min="1"
+                    max="1000000">
+                  <span class="input-group-text">m²</span>
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="areaPasto" class="form-label">Área de Pasto</label>
+                <div class="input-group">
+                  <input type="number" class="form-control" id="areaPasto" name="areaPasto" min="0" max="1000000">
+                  <span class="input-group-text">m²</span>
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="areaBosque" class="form-label">Área de Bosque</label>
+                <div class="input-group">
+                  <input type="number" class="form-control" id="areaBosque" name="areaBosque" min="0" max="1000000">
+                  <span class="input-group-text">m²</span>
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="areaCultivos" class="form-label">Área de Cultivos</label>
+                <div class="input-group">
+                  <input type="number" class="form-control" id="areaCultivos" name="areaCultivos" min="0" max="1000000">
+                  <span class="input-group-text">m²</span>
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="areaConstruida" class="form-label">Área Construida</label>
+                <div class="input-group">
+                  <input type="number" class="form-control" id="areaConstruida" name="areaConstruida" min="0"
+                    max="1000000">
+                  <span class="input-group-text">m²</span>
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <div class="card bg-light">
+                  <div class="card-body p-3">
+                    <small class="text-muted d-block mb-1">
+                      <i class="fas fa-calculator me-1"></i>Resumen de áreas
+                    </small>
+                    <div class="d-flex justify-content-between">
+                      <span>Áreas parciales:</span>
+                      <strong id="sumaAreas">0</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                      <span>Área restante:</span>
+                      <strong id="areaRestante" class="text-success">0</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Responsable -->
+            <div class="row">
+              <div class="col-12">
+                <h6 class="border-bottom pb-2 mb-3">
+                  <i class="fas fa-user-tie me-2"></i>Asignación de Responsable
+                </h6>
+              </div>
+              <div class="col-md-12 mb-3">
+                <label for="usuario" class="form-label">Usuario Responsable <span class="text-danger">*</span></label>
+                <select class="form-select" id="usuario" name="idUsuario" required>
+                  <option value="">Seleccionar responsable</option>
+                  <option th:each="usuario : ${usuarios}" th:value="${usuario.id}"
+                    th:text="${usuario.nombre} + ' (' + ${usuario.nombreUsuario} + ')'">
+                  </option>
+                </select>
+                <div class="form-text">Usuario que será responsable de la gestión de este establo</div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar Establo</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de confirmación para eliminar -->
+  <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title" id="deleteConfirmModalLabel">
+            <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>¿Está seguro de que desea eliminar este establo?</p>
+          <p class="fw-bold">Esta acción no se puede deshacer.</p>
+          <div class="alert alert-warning small mt-3">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Advertencia:</strong> Si hay animales registrados en este establo, deberán ser reubicados antes de
+            eliminarlo.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <form id="form-delete" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <input type="hidden" name="_method" value="delete" />
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" id="confirmDeleteBtn" class="btn btn-danger">Eliminar Establo</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Búsqueda en tiempo real
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) {
+        searchInput.addEventListener('input', function () {
+          const searchText = this.value.toLowerCase();
+          const rows = document.querySelectorAll('.establo-row');
+
+          rows.forEach(row => {
+            const nombre = row.cells[0].textContent.toLowerCase();
+            const sistema = row.cells[1].textContent.toLowerCase();
+            const ubicacion = row.cells[4].textContent.toLowerCase();
+            const responsable = row.cells[5].textContent.toLowerCase();
+
+            if (nombre.includes(searchText) || sistema.includes(searchText) ||
+              ubicacion.includes(searchText) || responsable.includes(searchText)) {
+              row.style.display = '';
+            } else {
+              row.style.display = 'none';
+            }
+          });
+        });
+      }
+
+      // Confirmación de eliminación
+      const deleteButtons = document.querySelectorAll('.delete-establo');
+      const deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+      const form = document.querySelector("#form-delete");
+      deleteButtons.forEach(button => {
+        button.addEventListener('click', function () {
+          const establoId = this.getAttribute('data-id');
+          const establoNombre = this.closest('tr').querySelector('td:nth-child(1)').textContent;
+
+          // Actualizar mensaje del modal con el nombre del establo
+          const modalBody = document.querySelector('#deleteConfirmModal .modal-body');
+          modalBody.innerHTML = `
+            <p>¿Está seguro de que desea eliminar el establo <strong>"${establoNombre}"</strong>?</p>
+            <p class="fw-bold text-danger">Esta acción no se puede deshacer.</p>
+            <div class="alert alert-warning small mt-3">
+              <i class="fas fa-exclamation-triangle me-2"></i>
+              <strong>Advertencia:</strong> Si hay animales registrados en este establo, deberán ser reubicados antes de eliminarlo.
+            </div>
+          `;
+
+          form.setAttribute('action', '/admin/establos/delete/' + establoId);
+          deleteConfirmModal.show();
+        });
+      });
+
+      // Cálculo automático de áreas
+      function calcularAreas() {
+        const areaTotal = parseInt(document.getElementById('areaTotal').value) || 0;
+        const areaPasto = parseInt(document.getElementById('areaPasto').value) || 0;
+        const areaBosque = parseInt(document.getElementById('areaBosque').value) || 0;
+        const areaCultivos = parseInt(document.getElementById('areaCultivos').value) || 0;
+        const areaConstruida = parseInt(document.getElementById('areaConstruida').value) || 0;
+
+        const sumaAreas = areaPasto + areaBosque + areaCultivos + areaConstruida;
+        const areaRestante = areaTotal - sumaAreas;
+
+        document.getElementById('sumaAreas').textContent = sumaAreas + ' m²';
+        document.getElementById('areaRestante').textContent = areaRestante + ' m²';
+
+        if (areaRestante < 0) {
+          document.getElementById('areaRestante').className = 'text-danger';
+        } else if (areaRestante === 0) {
+          document.getElementById('areaRestante').className = 'text-warning';
+        } else {
+          document.getElementById('areaRestante').className = 'text-success';
+        }
+      }
+
+      // Escuchar cambios en los campos de área
+      const areaFields = ['areaTotal', 'areaPasto', 'areaBosque', 'areaCultivos', 'areaConstruida'];
+      areaFields.forEach(field => {
+        const element = document.getElementById(field);
+        if (element) {
+          element.addEventListener('input', calcularAreas);
+        }
+      });
+
+      // Inicializar cálculo
+      calcularAreas();
+
+      // Validación del formulario
+      const addEstabloForm = document.getElementById('addEstabloForm');
+      if (addEstabloForm) {
+        addEstabloForm.addEventListener('submit', function (e) {
+          const areaTotal = parseInt(document.getElementById('areaTotal').value) || 0;
+          const areaPasto = parseInt(document.getElementById('areaPasto').value) || 0;
+          const areaBosque = parseInt(document.getElementById('areaBosque').value) || 0;
+          const areaCultivos = parseInt(document.getElementById('areaCultivos').value) || 0;
+          const areaConstruida = parseInt(document.getElementById('areaConstruida').value) || 0;
+
+          const sumaAreas = areaPasto + areaBosque + areaCultivos + areaConstruida;
+
+          if (sumaAreas > areaTotal) {
+            e.preventDefault();
+            alert('Error: La suma de las áreas parciales (' + sumaAreas + ' m²) no puede ser mayor que el área total (' + areaTotal + ' m²).');
+            return false;
+          }
+
+          // Cambiar texto del botón mientras se procesa
+          const submitBtn = addEstabloForm.querySelector('button[type="submit"]');
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Guardando...';
+        });
+      }
+
+      // Limpiar formulario cuando se cierra el modal
+      const addEstabloModal = document.getElementById('addEstabloModal');
+      if (addEstabloModal) {
+        addEstabloModal.addEventListener('hidden.bs.modal', function () {
+          document.querySelector('#addEstabloForm').reset();
+          calcularAreas(); // Recalcular áreas después de resetear
+        });
+      }
+
+      // Feedback visual para botón de eliminación
+      const deleteForm = document.querySelector("#form-delete");
+      if (deleteForm) {
+        deleteForm.addEventListener('submit', function (e) {
+          const submitBtn = document.querySelector('#confirmDeleteBtn');
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Eliminando...';
+        });
+      }
+    });
+  </script>
+
+  <style>
+    .badge {
+      font-size: 0.85em;
+      padding: 0.4em 0.8em;
+    }
+
+    .bg-primary {
+      background-color: #0d6efd !important;
+    }
+
+    .bg-success {
+      background-color: #198754 !important;
+    }
+
+    .bg-warning {
+      background-color: #ffc107 !important;
+    }
+
+    .bg-info {
+      background-color: #0dcaf0 !important;
+    }
+
+    .bg-secondary {
+      background-color: #6c757d !important;
+    }
+
+    .card-header {
+      border-radius: 8px 8px 0 0 !important;
+    }
+
+    .border-bottom {
+      border-bottom: 1px solid #dee2e6 !important;
+    }
+
+    .form-text {
+      font-size: 0.85em;
+    }
+
+    .input-group-text {
+      background-color: #f8f9fa;
+    }
+
+    .alert-warning {
+      background-color: #fff3cd;
+      border-color: #ffecb5;
+      color: #664d03;
+    }
+
+    .text-muted small {
+      font-size: 0.85em;
+    }
+
+    .table td {
+      vertical-align: middle;
+    }
+
+    .fa-haykal {
+      color: #8B4513;
+      /* Color marrón para el icono de establo */
+    }
+  </style>
+</body>
+
+</html>

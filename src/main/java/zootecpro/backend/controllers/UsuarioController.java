@@ -1,35 +1,47 @@
 package zootecpro.backend.controllers;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import zootecpro.backend.models.Usuario;
+import zootecpro.backend.models.api.ApiResponse;
 import zootecpro.backend.models.dto.InsertUsuario;
 import zootecpro.backend.models.dto.LoginUsuario;
+import zootecpro.backend.models.dto.UsuarioSimplified;
 import zootecpro.backend.services.UsuarioService;
+import zootecpro.backend.services.RolService;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api")
+@Slf4j
 @Tag(name = "Usuario", description = "API de gestión de usuarios")
 public class UsuarioController {
 
   private final UsuarioService usuarioService;
+  private final RolService rolService;
 
-  @PostMapping("/register")
+  @PostMapping("/api/register")
   @Operation(summary = "Registrar nuevo usuario")
   public ResponseEntity<String> register(@RequestBody InsertUsuario usuario) { // ✅ Import correcto
     try {
       usuarioService.insertUsuario(usuario);
-      return ResponseEntity.ok("Usuario registrado con éxito");
+      return ResponseEntity.status(201).body("Usuario registrado con éxito");
     } catch (Exception e) {
       return ResponseEntity.status(500).body("Error al registrar usuario: " + e.getMessage());
     }
   }
 
-  @PostMapping("/login")
+  @PostMapping("/api/login")
   @Operation(summary = "Realizar inicio de sesion")
   public ResponseEntity<String> login(@RequestBody LoginUsuario usuario) {
     try {
@@ -40,6 +52,139 @@ public class UsuarioController {
       return ResponseEntity.status(401).body(user.getMessage());
     } catch (Exception e) {
       return ResponseEntity.status(500).body("Error al logear el usuario: " + e.getMessage());
+    }
+  }
+
+  @GetMapping("/admin/login")
+  public ModelAndView loginForm() {
+    return new ModelAndView("admin/login");
+  }
+
+  @GetMapping("/admin/users/rol/view/{id}")
+  @Operation(summary = "Obtener usuario por ID")
+  public ModelAndView getUsuarioRolById(@PathVariable String id) {
+    ModelAndView model = new ModelAndView("admin/rol-view");
+    try {
+      log.debug("Cargando User con ID: {}", id);
+      Usuario usuario = usuarioService.getUsuarioById(UUID.fromString(id));
+      model.addObject("rol", usuario.getRol());
+      return model;
+    } catch (Exception e) {
+      log.error(e.getMessage());
+      log.error(e.getStackTrace().toString());
+      return model;
+    }
+  }
+
+  @GetMapping("/admin/users")
+  @Operation(summary = "Obtener todos los usuarios")
+  public ModelAndView getAllUsuarios() {
+    ModelAndView model = new ModelAndView("admin/users");
+    try {
+      log.debug("Cargando Users");
+      List<UsuarioSimplified> result = usuarioService.getAllUsers().stream()
+          .map(usuario -> {
+            return UsuarioSimplified.builder()
+                .id(usuario.getId())
+                .nombre(usuario.getNombre())
+                .licencia(Optional.ofNullable(usuario.getLicencia()))
+                .rol(usuario.getRol())
+                .nombreUsuario(usuario.getNombreUsuario())
+                .build();
+          }).toList();
+      List<String> roles = rolService.getRolesName();
+      model.addObject("roles", roles);
+      model.addObject("success", true);
+      model.addObject("activePage", "users");
+      model.addObject("users", result);
+      return model;
+    } catch (Exception e) {
+      log.error(e.getMessage());
+      log.error(e.getStackTrace().toString());
+      model.addObject("success", false);
+      return model;
+    }
+  }
+
+  @PostMapping("/admin/users")
+  public ModelAndView postUsuarios(@ModelAttribute InsertUsuario nuevoUsuario) {
+    ModelAndView model = new ModelAndView("admin/users");
+    try {
+      log.debug("Cargando Users");
+      List<UsuarioSimplified> result = usuarioService.getAllUsers().stream()
+          .map(usuario -> {
+            return UsuarioSimplified.builder()
+                .id(usuario.getId())
+                .nombre(usuario.getNombre())
+                .licencia(Optional.ofNullable(usuario.getLicencia()))
+                .rol(usuario.getRol())
+                .nombreUsuario(usuario.getNombreUsuario())
+                .build();
+          }).toList();
+      List<String> roles = rolService.getRolesName();
+      model.addObject("roles", roles);
+      model.addObject("activePage", "users");
+      model.addObject("users", result);
+      log.debug("Creando nuevo usuario: {}", nuevoUsuario.getNombreUsuario());
+      usuarioService.insertUsuario(nuevoUsuario);
+      model.addObject("success", true);
+      model.addObject("message", "Usuario creado con éxito");
+      return model;
+    } catch (Exception e) {
+      log.error(e.getMessage());
+      log.error(e.getStackTrace().toString());
+      model.addObject("success", false);
+      model.addObject("message", "Error al crear el usuario: " + e.getMessage());
+      return model;
+    }
+  }
+
+  @GetMapping("/admin/users/edit/{id}")
+  public ModelAndView getEditUsuarios(@PathVariable String id) {
+    ModelAndView model = new ModelAndView("admin/users/edit");
+    try {
+      log.debug("Cargando User con ID: {}", id);
+      Usuario usuario = usuarioService.getUsuarioById(UUID.fromString(id));
+      List<String> roles = rolService.getRolesName();
+      model.addObject("roles", roles);
+      model.addObject("user", usuario);
+      return model;
+    } catch (Exception e) {
+      log.error(e.getMessage());
+      log.error(e.getStackTrace().toString());
+      return model;
+    }
+  }
+
+  @PutMapping("/admin/users/edit/{id}")
+  public ModelAndView putUsuarios(@PathVariable String id, @ModelAttribute InsertUsuario updatedUsuario) {
+    ModelAndView model = new ModelAndView("redirect:/admin/users");
+    try {
+      log.info("Actualizando usuario con ID: {}", id);
+      usuarioService.updateUsuario(UUID.fromString(id), updatedUsuario);
+      return model;
+    } catch (Exception e) {
+      log.error(e.getMessage());
+      log.error(e.getStackTrace().toString());
+      model.addObject("success", false);
+      model.addObject("message", "Error al actualizar el usuario: " + e.getMessage());
+      return model;
+    }
+  }
+
+  @DeleteMapping("/admin/users/delete/{id}")
+  public ModelAndView deleteUsuario(@PathVariable String id) {
+    ModelAndView model = new ModelAndView("redirect:/admin/users");
+    try {
+      log.debug("Eliminando usuario con ID: {}", id);
+      usuarioService.deleteUsuario(UUID.fromString(id));
+      return model;
+    } catch (Exception e) {
+      log.error(e.getMessage());
+      log.error(e.getStackTrace().toString());
+      model.addObject("success", false);
+      model.addObject("message", "Error al eliminar el usuario: " + e.getMessage());
+      return model;
     }
   }
 }

@@ -1,5 +1,6 @@
 package zootecpro.backend.models;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -9,7 +10,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -35,13 +35,22 @@ public class Usuario implements UserDetails {
   private String nombre;
   private String nombreUsuario;
   private String contraseña;
+  private String correo;
   @OneToOne(fetch = FetchType.EAGER)
   private Rol rol;
+  @OneToOne(fetch = FetchType.LAZY)
+  private Licencia licencia;
+  private Boolean activo;
+  private LocalDate fechaCreacion;
+  private LocalDate fechaModificacion;
+  private LocalDate ultimoAcceso;
 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
     List<String> permisos = rol.getPermisos();
     List<GrantedAuthority> authorities = new ArrayList<>();
+    String rol = "ROLE_" + this.rol.getNombre();
+    authorities.add(new SimpleGrantedAuthority(rol));
     permisos.forEach(p -> {
       authorities.add(new SimpleGrantedAuthority(p));
     });
