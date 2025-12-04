@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -16,6 +17,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import zootecpro.backend.models.crecimiento.DesarrolloCrecimiento;
 import zootecpro.backend.models.enfermedad.Enfermedad;
 
 @Entity
@@ -34,7 +36,6 @@ public class Animal {
   private String codigo;
   private String identificadorElectronico;
   private String proposito;
-  private String otroIdentificador;
   private String color;
   private LocalDateTime fechaNacimiento;
   private String observaciones;
@@ -45,8 +46,11 @@ public class Animal {
   private Animal padre;
   @OneToOne
   private Animal madre;
-  @OneToMany
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "animal")
   private List<Enfermedad> enfermedades;
-  @OneToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.LAZY)
   private Establo establo;
+
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  private List<DesarrolloCrecimiento> desarrollosCrecimiento;
 }

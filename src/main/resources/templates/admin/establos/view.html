@@ -525,6 +525,25 @@
   </div>
 
   <script>
+    const currentAnimalIdToDelete = ""
+
+    const deleteButtons = document.querySelectorAll('.delete-animal');
+
+
+    deleteButtons.forEach(button => {
+      button.addEventListener('click', function () {
+        const animalId = this.getAttribute('data-id');
+        currentAnimalIdToDelete = animalId;
+      });
+    });
+
+    const formDelete = document.getElementById('form-delete-animal');
+    formDelete.addEventListener('submit', function (e) {
+      if (currentAnimalIdToDelete) {
+        this.setAttribute('action', '/admin/animales/delete/' + currentAnimalIdToDelete);
+      }
+    });
+
     document.addEventListener('DOMContentLoaded', function () {
       // Función para copiar ID al portapapeles
       function copyToClipboard(button) {

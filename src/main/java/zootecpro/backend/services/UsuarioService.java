@@ -89,7 +89,7 @@ public class UsuarioService implements UserDetailsService {
     if (!encoder.matches(password, usuario.getPassword())) {
       throw new UsernameNotFoundException("Contraseña incorrecta");
     }
-    return this.jwtService.generateToken(username);
+    return this.jwtService.generateToken(username, usuario.getAuthorities());
   }
 
   public void insertUsuario(InsertUsuario usuarioDto) {

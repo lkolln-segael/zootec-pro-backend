@@ -1,6 +1,7 @@
 package zootecpro.backend.controllers;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -43,15 +44,15 @@ public class UsuarioController {
 
   @PostMapping("/api/login")
   @Operation(summary = "Realizar inicio de sesion")
-  public ResponseEntity<String> login(@RequestBody LoginUsuario usuario) {
+  public ResponseEntity<Map<String, String>> login(@RequestBody LoginUsuario usuario) {
     try {
       String token = usuarioService.verifyUsuario(usuario.nombreUsuario, usuario.contraseña);
 
-      return ResponseEntity.ok(token);
+      return ResponseEntity.ok(Map.of("token", token));
     } catch (UsernameNotFoundException user) {
-      return ResponseEntity.status(401).body(user.getMessage());
+      return ResponseEntity.status(401).body(Map.of("error", user.getMessage()));
     } catch (Exception e) {
-      return ResponseEntity.status(500).body("Error al logear el usuario: " + e.getMessage());
+      return ResponseEntity.status(500).body(Map.of("error", "Error al logear el usuario: " + e.getMessage()));
     }
   }
 

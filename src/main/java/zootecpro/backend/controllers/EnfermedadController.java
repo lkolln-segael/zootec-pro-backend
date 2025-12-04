@@ -6,11 +6,17 @@ import zootecpro.backend.models.dto.TipoEnfermedadForm;
 import zootecpro.backend.models.dto.TratamientoForm;
 import zootecpro.backend.models.enfermedad.Enfermedad;
 import zootecpro.backend.models.enfermedad.TipoEnfermedad;
+import zootecpro.backend.models.enfermedad.TipoTratamiento;
+import zootecpro.backend.models.enfermedad.Tratamiento;
+import zootecpro.backend.models.establo.Animal;
 import zootecpro.backend.models.establo.TipoAnimal;
 import zootecpro.backend.services.AnimalService;
 import zootecpro.backend.services.EnfermedadService;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -25,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -107,13 +114,38 @@ public class EnfermedadController {
   }
 
   @GetMapping("/admin/enfermedades/registrar")
+  public ModelAndView registrarEnfermedadForm(@RequestParam String animalId) {
+    ModelAndView model = new ModelAndView("admin/enfermedades/registrar");
+    Optional<Animal> animal = animalService.getAnimalById(animalId);
+    List<TipoEnfermedad> enfermedades = service.getAllTiposEnfermedades();
+    model.addObject("tiposEnfermedad", enfermedades);
+    model.addObject("animal", animal.get());
+    model.addObject("activePage", "enfermedades");
+    return model;
+  }
+
+  @GetMapping("/admin/enfermedades/tipo/tratamientos")
+  public ResponseEntity<List<TipoTratamiento>> getAllTiposTratamientos(@RequestParam String tipoId) {
+    List<TipoTratamiento> tratamientos = service.getAllTiposTratamientos(tipoId);
+    return ResponseEntity.status(200).header("Cache-Control", "public, max-age=3600").eTag(tipoId).body(tratamientos);
+  }
+
+  @PostMapping("/admin/enfermedades/registrar")
   public ModelAndView registrarEnfermedadForm(@RequestParam String animalId,
       @ModelAttribute EnfermedadForm enfermedad) {
-    ModelAndView model = new ModelAndView("admin/enfermedades/registrar");
+    ModelAndView model = new ModelAndView("redirect:/admin/animales/view/" + animalId);
     List<TipoEnfermedad> enfermedades = service.getAllTiposEnfermedades();
     service.insertEnfermedad(animalId, enfermedad);
     model.addObject("tipoEnfermedades", enfermedades);
     model.addObject("activePage", "enfermedades");
+
     return model;
+  }
+
+  @Operation(summary = "Obtener todos los tipos de enfermedades")
+  @GetMapping("/api/enfermedad/tipo")
+  public ResponseEntity<List<TipoEnfermedad>> getAllTiposEnfermedades() {
+    List<TipoEnfermedad> enfermedades = service.getAllTiposEnfermedades();
+    return ResponseEntity.ok(enfermedades);
   }
 }

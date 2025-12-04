@@ -1,12 +1,15 @@
 package zootecpro.backend.services;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import zootecpro.backend.models.crecimiento.DesarrolloCrecimiento;
+import zootecpro.backend.models.dto.AnimalExtended;
 import zootecpro.backend.models.dto.AnimalForm;
 import zootecpro.backend.models.dto.TipoAnimalForm;
 import zootecpro.backend.models.establo.Animal;
@@ -43,7 +46,6 @@ public class AnimalService {
         .descripcion(animal.descripcion)
         .identificadorElectronico(animal.identificadorElectronico)
         .proposito(animal.proposito)
-        .otroIdentificador(animal.otroIdentificador)
         .color(animal.color)
         .fechaNacimiento(animal.fechaNacimiento)
         .observaciones(animal.observaciones)
@@ -95,7 +97,6 @@ public class AnimalService {
     animalModel.setCodigo(animal.codigo);
     animalModel.setIdentificadorElectronico(animal.identificadorElectronico);
     animalModel.setProposito(animal.proposito);
-    animalModel.setOtroIdentificador(animal.otroIdentificador);
     animalModel.setColor(animal.color);
     animalModel.setFechaNacimiento(animal.fechaNacimiento);
     animalModel.setObservaciones(animal.observaciones);
@@ -153,6 +154,56 @@ public class AnimalService {
       return false;
     }
     this.tipoAnimalRepository.delete(tipoOpt.get());
+    return true;
+  }
+
+  public boolean insertAnimalExtended(String establoId, AnimalExtended animal) {
+    // Implementation goes here
+    //
+    var establoOpt = this.establoRepository.findById(UUID.fromString(establoId));
+    if (!establoOpt.isPresent()) {
+      return false;
+    }
+    var tipoAnimalOpt = this.tipoAnimalRepository.findById(UUID.fromString(animal.idTipoAnimal));
+    if (!tipoAnimalOpt.isPresent()) {
+      return false;
+    }
+    var establo = establoOpt.get();
+    var tipoAnimal = tipoAnimalOpt.get();
+    var animalModel = Animal.builder()
+        .id(UUID.randomUUID())
+        .tipoAnimal(tipoAnimal)
+        .codigo(animal.codigoAsosiacion)
+        .descripcion(animal.descripcion)
+        .identificadorElectronico(animal.identificadorElectronico)
+        .proposito(animal.proposito)
+        .color(animal.color)
+        .genero(animal.genero)
+        .establo(establo)
+        .fechaNacimiento(animal.fechaNacimiento)
+        .observaciones(animal.observacionNacimiento + " " + animal.observacionParto)
+        .desarrollosCrecimiento(List.of(
+            DesarrolloCrecimiento.builder()
+                .id(UUID.randomUUID())
+                .estado("NACIMIENTO")
+                .fechaRegistro(LocalDateTime.now())
+                .pesoActual(animal.pesoActual)
+                .tamaño(animal.tamanoActual.doubleValue())
+                .condicionCorporal(animal.condicionCorporal)
+                .unidadesAnimal(animal.unidadesAnimales)
+                .build()))
+        .build();
+
+    this.repository.save(animalModel);
+    return true;
+  }
+
+  public boolean deleteAnimal(String id) {
+    var animalOpt = this.repository.findById(UUID.fromString(id));
+    if (animalOpt.isEmpty()) {
+      return false;
+    }
+    this.repository.delete(animalOpt.get());
     return true;
   }
 }

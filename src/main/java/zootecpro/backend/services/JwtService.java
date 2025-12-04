@@ -2,18 +2,22 @@ package zootecpro.backend.services;
 
 // Imports de Java estándar
 import java.security.Key;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Map;
 import java.util.function.Function;
 
 import javax.crypto.SecretKey;
 
 // Imports de Spring
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 // Imports de JJWT (JWT Library)
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
@@ -28,13 +32,14 @@ public class JwtService {
   @Value("${jwt.expiration:86400000}") // 24 horas por defecto
   private long expiration;
 
-  public String generateToken(String username) {
-    return Jwts.builder()
+  public String generateToken(String username, Collection<? extends GrantedAuthority> authority) {
+    JwtBuilder builder = Jwts.builder()
         .setSubject(username)
         .setIssuedAt(new Date())
         .setExpiration(new Date(System.currentTimeMillis() + expiration))
-        .signWith(getSigningKey(), SignatureAlgorithm.HS256)
-        .compact();
+        .signWith(getSigningKey(), SignatureAlgorithm.HS256);
+    builder.claims(Map.of("role", authority));
+    return builder.compact();
   }
 
   public String extractUsername(String token) {

@@ -2,6 +2,7 @@ package zootecpro.backend.controllers;
 
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,20 +10,26 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import zootecpro.backend.models.api.ApiResponse;
+import zootecpro.backend.models.dto.AnimalExtended;
 import zootecpro.backend.models.dto.AnimalForm;
 import zootecpro.backend.models.dto.TipoAnimalForm;
+import zootecpro.backend.models.establo.TipoAnimal;
 import zootecpro.backend.services.AnimalService;
 
 @Controller
 @RequiredArgsConstructor
 @RestController
 @Slf4j
+@Tag(name = "Animal", description = "API de gestión de animales")
 public class AnimalController {
 
   private final AnimalService service;
@@ -131,5 +138,30 @@ public class AnimalController {
     ModelAndView model = new ModelAndView("redirect:/admin/establos/view/" + establoId);
     this.service.updateAnimal(establoId, id, tipo);
     return model;
+  }
+
+  @GetMapping("/api/animales/tipo/list")
+  public ResponseEntity<ApiResponse<List<TipoAnimal>>> getTipoAnimalesApi() {
+    List<TipoAnimal> tiposAnimal = service.getAllTiposAnimal();
+    ApiResponse<List<TipoAnimal>> response = ApiResponse.<List<TipoAnimal>>builder()
+        .data(tiposAnimal)
+        .build();
+    return ResponseEntity.ok(response);
+  }
+
+  @PostMapping("/api/animales/add")
+  public ResponseEntity<ApiResponse<String>> insertAnimalApi(@RequestParam String establoId,
+      @RequestBody AnimalExtended animalExtended) {
+    this.service.insertAnimalExtended(establoId, animalExtended);
+    ApiResponse<String> response = ApiResponse.<String>builder()
+        .message("Animal creado con éxito")
+        .build();
+    return ResponseEntity.ok(response);
+  }
+
+  @DeleteMapping("/admin/animales/delete/{id}")
+  public ModelAndView deleteAnimalApi(@PathVariable String id) {
+    this.service.deleteAnimal(id);
+    return new ModelAndView("redirect:/admin/establos");
   }
 }

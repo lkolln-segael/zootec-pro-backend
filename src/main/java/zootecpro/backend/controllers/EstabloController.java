@@ -1,20 +1,26 @@
 package zootecpro.backend.controllers;
 
+import java.util.Collections;
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import zootecpro.backend.models.Rol;
+import zootecpro.backend.models.Usuario;
+import zootecpro.backend.models.api.ApiResponse;
 import zootecpro.backend.models.dto.EstabloForm;
+import zootecpro.backend.models.dto.EstabloSimplified;
 import zootecpro.backend.models.dto.UsuarioSimplified;
 import zootecpro.backend.models.establo.Establo;
 import zootecpro.backend.services.EstabloService;
@@ -81,5 +87,25 @@ public class EstabloController {
     model.addObject("establo", establo);
     this.establoService.updateEstablo(id, establoForm);
     return model;
+  }
+
+  @GetMapping("/api/establos/list")
+  public ResponseEntity<ApiResponse<List<EstabloSimplified>>> getEstablosApi(@RequestParam String userName) {
+    List<Establo> establos = establoService.getEstablos();
+    ApiResponse<List<EstabloSimplified>> response = ApiResponse.<List<EstabloSimplified>>builder()
+        .data(establos.stream().filter(establo -> establo.getUsuario().getNombreUsuario().equals(userName))
+            .map(establo -> {
+              return EstabloSimplified.builder()
+                  .id(establo.getId().toString())
+                  .nombre(establo.getNombre())
+                  .ubicacion(establo.getUbicacion())
+                  .sistemaProduccion(establo.getSistemaProduccion())
+                  .capacidadMaxima(establo.getCapacidadMaxima())
+                  .build();
+            })
+            .toList())
+        .message("Establos obtenidos correctamente")
+        .build();
+    return ResponseEntity.ok(response);
   }
 }

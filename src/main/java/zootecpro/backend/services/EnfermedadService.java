@@ -1,5 +1,6 @@
 package zootecpro.backend.services;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -14,11 +15,14 @@ import zootecpro.backend.models.dto.EnfermedadForm;
 import zootecpro.backend.models.dto.SintomaForm;
 import zootecpro.backend.models.dto.TipoEnfermedadForm;
 import zootecpro.backend.models.dto.TratamientoForm;
+import zootecpro.backend.models.enfermedad.Enfermedad;
 import zootecpro.backend.models.enfermedad.Sintoma;
 import zootecpro.backend.models.enfermedad.TipoEnfermedad;
 import zootecpro.backend.models.enfermedad.TipoTratamiento;
+import zootecpro.backend.models.establo.Animal;
 import zootecpro.backend.models.establo.TipoAnimal;
 import zootecpro.backend.repositories.AnimalRepository;
+import zootecpro.backend.repositories.EnfermedadRepository;
 import zootecpro.backend.repositories.TipoAnimalRepository;
 import zootecpro.backend.repositories.TipoEnfermedadRepository;
 
@@ -32,6 +36,8 @@ public class EnfermedadService {
   private final TipoAnimalRepository tipoAnimalRepository;
 
   private final AnimalRepository animalRepository;
+
+  private final EnfermedadRepository enfermedadRepository;
 
   public boolean insertTipoEnfermedad(TipoEnfermedadForm tipoEnfermedad) {
     log.info("Insertando tipo de enfermedad: " + tipoEnfermedad.toString());
@@ -126,8 +132,77 @@ public class EnfermedadService {
     return true;
   }
 
-  public boolean insertEnfermedad(String animalId, EnfermedadForm enfermedad) {
-    var animalOpt = this.
+  public boolean insertEnfermedad(String animalId, EnfermedadForm enfermedadForm) {
+    var animalOpt = this.animalRepository.findById(UUID.fromString(animalId));
+    if (animalOpt.isEmpty()) {
+      return false;
+    }
+
+    var tipoEnfermedadOpt = this.tipoEnfermedadRepository
+        .findById(UUID.fromString(enfermedadForm.getIdTipoEnfermedad()));
+    if (tipoEnfermedadOpt.isEmpty()) {
+      return false;
+    }
+    TipoEnfermedad tipoEnfermedad = tipoEnfermedadOpt.get();
+
+    Animal animal = animalOpt.get();
+
+    // Convertir EnfermedadForm a Entidad Enfermedad
+    Enfermedad enfermedad = Enfermedad.builder()
+        .nombre(enfermedadForm.getNombre())
+        .tipoEnfermedad(tipoEnfermedad)
+        .animal(animal) // Establecer la relación con el animal
+        .build();
+
+    // Inicializar la lista de enfermedades si es null
+    if (animal.getEnfermedades() == null) {
+      animal.setEnfermedades(new ArrayList<>());
+    }
+
+    // Agregar la enfermedad a la lista del animal
+    animal.getEnfermedades().add(enfermedad);
+
+    // Guardar el animal (la enfermedad se guardará por cascada)
+    animalRepository.save(animal);
+
     return true;
+  }
+
+  public boolean editarEnfermedad(String enfermedadId, EnfermedadForm enfermedadForm) {
+    var enfermedadOpt = this.enfermedadRepository.findById(UUID.fromString(enfermedadId));
+    if (enfermedadOpt.isEmpty()) {
+      return false;
+    }
+
+    var tipoEnfermedadOpt = this.tipoEnfermedadRepository
+        .findById(UUID.fromString(enfermedadForm.getIdTipoEnfermedad()));
+    if (tipoEnfermedadOpt.isEmpty()) {
+      return false;
+    }
+    TipoEnfermedad tipoEnfermedad = tipoEnfermedadOpt.get();
+
+    Enfermedad enfermedad = enfermedadOpt.get();
+
+    enfermedad.setNombre(enfermedadForm.getNombre());
+    enfermedad.setTipoEnfermedad(tipoEnfermedad);
+    return true;
+  }
+
+  public boolean eliminarEnfermedad(String enfermedadId) {
+    var enfermedadOpt = this.enfermedadRepository.findById(UUID.fromString(enfermedadId));
+    if (enfermedadOpt.isEmpty()) {
+      return false;
+    }
+    Enfermedad enfermedad = enfermedadOpt.get();
+    enfermedadRepository.delete(enfermedad);
+    return true;
+  }
+
+  public List<TipoTratamiento> getAllTiposTratamientos(String tipoId) {
+    Optional<TipoEnfermedad> tipoOpt = this.tipoEnfermedadRepository.findById(UUID.fromString(tipoId));
+    if (tipoOpt.isEmpty()) {
+      return List.of();
+    }
+    return tipoOpt.get().getTratamientos();
   }
 }
