@@ -49,7 +49,7 @@ public class AnimalService {
         .color(animal.color)
         .fechaNacimiento(animal.fechaNacimiento)
         .observaciones(animal.observaciones)
-        .genero(animal.genero.equals("HEMBRA"))
+        .genero(animal.genero)
         .establo(establo)
         .tipoAnimal(tipoAnimal)
         .build();
@@ -100,7 +100,7 @@ public class AnimalService {
     animalModel.setColor(animal.color);
     animalModel.setFechaNacimiento(animal.fechaNacimiento);
     animalModel.setObservaciones(animal.observaciones);
-    animalModel.setGenero(animal.genero.equals("HEMBRA"));
+    animalModel.setGenero(animal.genero);
     animalModel.setEstablo(establo);
     animalModel.setTipoAnimal(tipoAnimal);
 
@@ -157,6 +157,16 @@ public class AnimalService {
     return true;
   }
 
+  public List<Animal> getAllAnimals(String establoId) {
+    return this.repository.findAll()
+        .stream()
+        .filter(animal -> animal.getEstablo().getId().toString().equals(establoId))
+        .map(animal -> {
+          animal.setEstablo(null);
+          return animal;
+        }).toList();
+  }
+
   public boolean insertAnimalExtended(String establoId, AnimalExtended animal) {
     // Implementation goes here
     //
@@ -170,6 +180,7 @@ public class AnimalService {
     }
     var establo = establoOpt.get();
     var tipoAnimal = tipoAnimalOpt.get();
+
     var animalModel = Animal.builder()
         .id(UUID.randomUUID())
         .tipoAnimal(tipoAnimal)

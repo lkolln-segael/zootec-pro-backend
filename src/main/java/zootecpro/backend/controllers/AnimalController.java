@@ -22,6 +22,7 @@ import zootecpro.backend.models.api.ApiResponse;
 import zootecpro.backend.models.dto.AnimalExtended;
 import zootecpro.backend.models.dto.AnimalForm;
 import zootecpro.backend.models.dto.TipoAnimalForm;
+import zootecpro.backend.models.establo.Animal;
 import zootecpro.backend.models.establo.TipoAnimal;
 import zootecpro.backend.services.AnimalService;
 
@@ -149,10 +150,30 @@ public class AnimalController {
     return ResponseEntity.ok(response);
   }
 
-  @PostMapping("/api/animales/add")
-  public ResponseEntity<ApiResponse<String>> insertAnimalApi(@RequestParam String establoId,
+  @PostMapping("/api/animales/add/extended")
+  public ResponseEntity<ApiResponse<String>> insertAnimalExtendedApi(@RequestParam String establoId,
       @RequestBody AnimalExtended animalExtended) {
     this.service.insertAnimalExtended(establoId, animalExtended);
+    ApiResponse<String> response = ApiResponse.<String>builder()
+        .message("Animal creado con éxito")
+        .build();
+    return ResponseEntity.ok(response);
+  }
+
+  @GetMapping("/api/animales/all")
+  public ResponseEntity<ApiResponse<List<Animal>>> getAllAnimalesApi(
+      @RequestParam String establoId) {
+    List<Animal> animales = service.getAllAnimals(establoId);
+    return ResponseEntity.ok(
+        ApiResponse.<List<Animal>>builder()
+            .data(animales)
+            .build());
+  }
+
+  @PostMapping("/api/animales/add")
+  public ResponseEntity<ApiResponse<String>> insertAnimalApi(@RequestParam String establoId,
+      @RequestBody AnimalForm animalForm) {
+    this.service.insertAnimal(establoId, animalForm);
     ApiResponse<String> response = ApiResponse.<String>builder()
         .message("Animal creado con éxito")
         .build();

@@ -19,11 +19,15 @@ public class AnimalForm {
   public String proposito;
   public String otroIdentificador;
   public String color;
-  public String genero;
+  public Boolean genero;
   public LocalDateTime fechaNacimiento;
   public String observaciones;
   public String idTipoAnimal;
   public Optional<String> idPadre;
   public Optional<String> idMadre;
   public String idEstablo;
+  public Optional<String> pesoActual;
+  public Optional<String> tamanoActual;
+  public Optional<String> unidadesAnimales;
+  public Optional<String> condicionCorporal;
 }
