@@ -1,9 +1,11 @@
 package zootecpro.backend.models.enfermedad;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,6 +21,7 @@ public class Tratamiento {
   @Id
   private UUID id;
   private String nombre;
-  @OneToOne
+  @ManyToOne
   private TipoTratamiento tipoTratamiento;
+  private LocalDateTime fechaRegistro;
 }

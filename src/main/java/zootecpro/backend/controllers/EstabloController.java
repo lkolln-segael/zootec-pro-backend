@@ -37,7 +37,7 @@ public class EstabloController {
 
   @GetMapping("/admin/establos")
   public ModelAndView getEstablos() {
-    ModelAndView model = new ModelAndView("/admin/establos");
+    ModelAndView model = new ModelAndView("admin/establos");
     List<Establo> establos = establoService.getEstablos();
     List<UsuarioSimplified> usuarioSimplifieds = usuarioService.getAllUsers()
         .stream().filter(u -> u.getRol().getNombre().toUpperCase().equals("ADMIN"))
@@ -63,7 +63,7 @@ public class EstabloController {
 
   @GetMapping("/admin/establos/view/{id}")
   public ModelAndView viewEstablo(@PathVariable String id) {
-    ModelAndView model = new ModelAndView("/admin/establos/view");
+    ModelAndView model = new ModelAndView("admin/establos/view");
     model.addObject("activaPage", "establos");
     Establo establo = establoService.getEstabloById(id).get();
     model.addObject("establo", establo);
@@ -72,7 +72,7 @@ public class EstabloController {
 
   @GetMapping("/admin/establos/edit/{id}")
   public ModelAndView editEstablo(@PathVariable String id, @ModelAttribute EstabloForm establoForm) {
-    ModelAndView model = new ModelAndView("/admin/establos/edit");
+    ModelAndView model = new ModelAndView("admin/establos/edit");
     model.addObject("activaPage", "establos");
     Establo establo = establoService.getEstabloById(id).get();
     model.addObject("establo", establo);

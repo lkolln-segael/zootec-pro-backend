@@ -56,6 +56,12 @@ public class UsuarioController {
     }
   }
 
+  @GetMapping("/api/users")
+  @Operation(summary = "Obtener usuarios")
+  public ResponseEntity<List<UsuarioSimplified>> getUsuariosByEstablo(@RequestParam String establoId) {
+    return ResponseEntity.ok(usuarioService.getTrabajadores(UUID.fromString(establoId)));
+  }
+
   @GetMapping("/admin/login")
   public ModelAndView loginForm() {
     return new ModelAndView("admin/login");

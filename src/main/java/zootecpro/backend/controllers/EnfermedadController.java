@@ -1,5 +1,7 @@
 package zootecpro.backend.controllers;
 
+import zootecpro.backend.models.api.ApiResponse;
+import zootecpro.backend.models.dto.EnfermedadAnimalForm;
 import zootecpro.backend.models.dto.EnfermedadForm;
 import zootecpro.backend.models.dto.SintomaForm;
 import zootecpro.backend.models.dto.TipoEnfermedadForm;
@@ -13,6 +15,7 @@ import zootecpro.backend.models.establo.TipoAnimal;
 import zootecpro.backend.services.AnimalService;
 import zootecpro.backend.services.EnfermedadService;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +36,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -147,5 +151,22 @@ public class EnfermedadController {
   public ResponseEntity<List<TipoEnfermedad>> getAllTiposEnfermedades() {
     List<TipoEnfermedad> enfermedades = service.getAllTiposEnfermedades();
     return ResponseEntity.ok(enfermedades);
+  }
+
+  @PostMapping("/api/enfermedad/animal/add")
+  public ResponseEntity<ApiResponse<String>> registrarEnfermedad(@Valid @RequestBody EnfermedadAnimalForm enfermedad) {
+    this.service.insertEnfermedadCompleto(enfermedad);
+    return ResponseEntity.ok(ApiResponse.<String>builder().data("").build());
+  }
+
+  @GetMapping("/api/enfermedad/list")
+  public ResponseEntity<ApiResponse<List<Enfermedad>>> getEnfermedades(@RequestParam Optional<Integer> año) {
+    var añoValue = año.isPresent() ? año.get() : 9999;
+    List<Enfermedad> enfermedades = this.service.getEnfermedades()
+        .stream()
+        .filter(e -> e.getFechaRegistro() != null
+            && e.getFechaRegistro().isBefore(LocalDateTime.of(añoValue + 1, 1, 1, 0, 0, 0)))
+        .toList();
+    return ResponseEntity.ok(ApiResponse.<List<Enfermedad>>builder().data(enfermedades).build());
   }
 }

@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import io.jsonwebtoken.lang.Collections;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import zootecpro.backend.models.Rol;
 import zootecpro.backend.models.Usuario;
 import zootecpro.backend.models.dto.InsertUsuario;
+import zootecpro.backend.models.dto.UsuarioSimplified;
 import zootecpro.backend.repositories.*;
 
 @Slf4j
@@ -27,14 +29,18 @@ public class UsuarioService implements UserDetailsService {
 
   private final RolRepository rolRepository;
 
+  private final EstabloRepository establoRepository;
+
   private final JwtService jwtService;
 
   private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
-  public UsuarioService(UsuarioRepository repository, RolRepository rolRepository, JwtService jwtService) {
+  public UsuarioService(UsuarioRepository repository, RolRepository rolRepository, JwtService jwtService,
+      EstabloRepository establoRepository) {
     this.repository = repository;
     this.rolRepository = rolRepository;
     this.jwtService = jwtService;
+    this.establoRepository = establoRepository;
     createSuperAdmin();
   }
 
@@ -143,6 +149,22 @@ public class UsuarioService implements UserDetailsService {
     } else {
       throw new UsernameNotFoundException("Usuario no encontrado");
     }
+  }
+
+  public List<UsuarioSimplified> getTrabajadores(UUID establoId) {
+    var establoOpt = this.establoRepository.findById(establoId);
+    if (establoOpt.isEmpty()) {
+      return Collections.emptyList();
+    }
+    var establo = establoOpt.get();
+    return establo.getTrabajadores()
+        .stream()
+        .map(e -> UsuarioSimplified.builder()
+            .id(e.getId())
+            .nombre(e.getNombre())
+            .rol(e.getRol())
+            .build())
+        .toList();
   }
 
   public boolean updateUsuario(UUID id, InsertUsuario usuario) {

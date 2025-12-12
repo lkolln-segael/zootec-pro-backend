@@ -1,6 +1,8 @@
 package zootecpro.backend.controllers;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -21,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import zootecpro.backend.models.api.ApiResponse;
 import zootecpro.backend.models.dto.AnimalExtended;
 import zootecpro.backend.models.dto.AnimalForm;
+import zootecpro.backend.models.dto.DesarrolloCrecimientoForm;
 import zootecpro.backend.models.dto.TipoAnimalForm;
 import zootecpro.backend.models.establo.Animal;
 import zootecpro.backend.models.establo.TipoAnimal;
@@ -162,11 +165,15 @@ public class AnimalController {
 
   @GetMapping("/api/animales/all")
   public ResponseEntity<ApiResponse<List<Animal>>> getAllAnimalesApi(
-      @RequestParam String establoId) {
-    List<Animal> animales = service.getAllAnimals(establoId);
+      @RequestParam String establoId, @RequestParam Optional<Integer> año) {
+    var añoValue = año.isPresent() ? año.get() : 9999;
+    var animales = service.getAllAnimals(establoId);
     return ResponseEntity.ok(
         ApiResponse.<List<Animal>>builder()
-            .data(animales)
+            .data(animales.stream()
+                .filter(
+                    a -> año != null && a.getFechaNacimiento().isBefore(LocalDateTime.of(añoValue + 1, 1, 1, 0, 0, 0)))
+                .toList())
             .build());
   }
 
@@ -184,5 +191,14 @@ public class AnimalController {
   public ModelAndView deleteAnimalApi(@PathVariable String id) {
     this.service.deleteAnimal(id);
     return new ModelAndView("redirect:/admin/establos");
+  }
+
+  @PostMapping("/api/animales/desarrollo/add")
+  public ResponseEntity<ApiResponse<String>> insertarDesarrolloAnimal(
+      @RequestBody DesarrolloCrecimientoForm desarrollo) {
+    this.service.insertCrecimiento(desarrollo);
+    return ResponseEntity.ok(ApiResponse.<String>builder()
+        .data("Desarrollo crecimiento insertado con exito")
+        .build());
   }
 }

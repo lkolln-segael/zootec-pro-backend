@@ -45,6 +45,9 @@ public class Establo {
   @ManyToOne
   private Usuario usuario;
 
+  @OneToMany(cascade = CascadeType.ALL)
+  private List<Usuario> trabajadores;
+
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "establo")
   List<Animal> animales;
 }

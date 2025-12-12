@@ -1,5 +1,6 @@
 package zootecpro.backend.services;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import io.jsonwebtoken.lang.Collections;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import zootecpro.backend.models.dto.EnfermedadAnimalForm;
 import zootecpro.backend.models.dto.EnfermedadForm;
 import zootecpro.backend.models.dto.SintomaForm;
 import zootecpro.backend.models.dto.TipoEnfermedadForm;
@@ -19,12 +21,14 @@ import zootecpro.backend.models.enfermedad.Enfermedad;
 import zootecpro.backend.models.enfermedad.Sintoma;
 import zootecpro.backend.models.enfermedad.TipoEnfermedad;
 import zootecpro.backend.models.enfermedad.TipoTratamiento;
+import zootecpro.backend.models.enfermedad.Tratamiento;
 import zootecpro.backend.models.establo.Animal;
 import zootecpro.backend.models.establo.TipoAnimal;
 import zootecpro.backend.repositories.AnimalRepository;
 import zootecpro.backend.repositories.EnfermedadRepository;
 import zootecpro.backend.repositories.TipoAnimalRepository;
 import zootecpro.backend.repositories.TipoEnfermedadRepository;
+import zootecpro.backend.repositories.TipoTratamientoRepository;
 
 @Service
 @Slf4j
@@ -32,6 +36,8 @@ import zootecpro.backend.repositories.TipoEnfermedadRepository;
 public class EnfermedadService {
 
   private final TipoEnfermedadRepository tipoEnfermedadRepository;
+
+  private final TipoTratamientoRepository tipoTratamientoRepository;
 
   private final TipoAnimalRepository tipoAnimalRepository;
 
@@ -58,6 +64,51 @@ public class EnfermedadService {
             .nombre(tipoEnfermedad.getNombre())
             .tipoAnimales(tipoAnimalOpt.get())
             .build());
+    return true;
+  }
+
+  public List<Enfermedad> getEnfermedades() {
+    return this.enfermedadRepository.findAllEnfermedadesConAnimal()
+        .stream()
+        .map(e -> {
+          var animal = new Animal();
+          animal.setCodigo(e.getAnimal().getCodigo());
+          e.setAnimal(animal);
+          return e;
+        })
+        .toList();
+  }
+
+  public boolean insertEnfermedadCompleto(EnfermedadAnimalForm enfermedad) {
+    log.info(enfermedad.toString());
+    var animalOpt = this.animalRepository.findById(UUID.fromString(enfermedad.animalId()));
+    if (animalOpt.isEmpty()) {
+      return false;
+    }
+    Animal animal = animalOpt.get();
+    var tipoEnfermedadOpt = this.tipoEnfermedadRepository.findById(UUID.fromString(enfermedad.tipoEnfermedadId()));
+    if (tipoEnfermedadOpt.isEmpty()) {
+      return false;
+    }
+    List<TipoTratamiento> tipoTratamiento = this.tipoTratamientoRepository.findAll();
+    TipoEnfermedad tipoEnfermedad = tipoEnfermedadOpt.get();
+    List<Enfermedad> enfermedades = animal.getEnfermedades();
+    enfermedades.add(Enfermedad.builder()
+        .id(UUID.randomUUID())
+        .tratamientos(tipoTratamiento.stream()
+            .map(t -> Tratamiento.builder()
+                .id(UUID.randomUUID())
+                .fechaRegistro(LocalDateTime.now())
+                .nombre(t.getNombre())
+                .tipoTratamiento(t)
+                .build())
+            .toList())
+        .tipoEnfermedad(tipoEnfermedad)
+        .animal(animal)
+        .nombre(tipoEnfermedad.getNombre() + "-" + animal.getCodigo())
+        .fechaRegistro(LocalDateTime.now())
+        .build());
+    this.animalRepository.save(animal);
     return true;
   }
 

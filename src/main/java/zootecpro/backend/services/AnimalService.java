@@ -2,19 +2,27 @@ package zootecpro.backend.services;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import io.jsonwebtoken.lang.Collections;
 import zootecpro.backend.models.crecimiento.DesarrolloCrecimiento;
 import zootecpro.backend.models.dto.AnimalExtended;
 import zootecpro.backend.models.dto.AnimalForm;
+import zootecpro.backend.models.dto.DesarrolloCrecimientoForm;
+import zootecpro.backend.models.dto.EnfermedadAnimalForm;
+import zootecpro.backend.models.dto.ProduccionForm;
 import zootecpro.backend.models.dto.TipoAnimalForm;
+import zootecpro.backend.models.enfermedad.Enfermedad;
 import zootecpro.backend.models.establo.Animal;
 import zootecpro.backend.models.establo.Establo;
 import zootecpro.backend.models.establo.TipoAnimal;
+import zootecpro.backend.models.registros.RegistroProduccion;
 import zootecpro.backend.repositories.*;
 
 import lombok.RequiredArgsConstructor;
@@ -26,6 +34,7 @@ public class AnimalService {
   private final AnimalRepository repository;
   private final TipoAnimalRepository tipoAnimalRepository;
   private final EstabloRepository establoRepository;
+  private final RegistroProduccionRepository registroProduccionRepository;
 
   public boolean insertAnimal(String establoId, AnimalForm animal) {
     Optional<Establo> establoOpt = this.establoRepository.findById(UUID.fromString(establoId));
@@ -157,19 +166,78 @@ public class AnimalService {
     return true;
   }
 
+  @Transactional(readOnly = true)
   public List<Animal> getAllAnimals(String establoId) {
-    return this.repository.findAll()
-        .stream()
-        .filter(animal -> animal.getEstablo().getId().toString().equals(establoId))
-        .map(animal -> {
-          animal.setEstablo(null);
-          return animal;
-        }).toList();
+    var animales = this.repository.findAll();
+    animales = animales.stream()
+        .map(a -> {
+          var enfermedades = a.getEnfermedades()
+              .stream()
+              .map(e -> {
+                return Enfermedad.builder()
+                    .id(e.getId())
+                    .nombre(e.getNombre())
+                    .fechaRegistro(e.getFechaRegistro())
+                    .tipoEnfermedad(e.getTipoEnfermedad())
+                    .build();
+              })
+              .toList();
+          var produccion = a.getProduccion();
+          produccion.forEach(p -> p.setAnimal(null));
+          return Animal.builder()
+              .id(a.getId())
+              .descripcion(a.getDescripcion())
+              .codigo(a.getCodigo())
+              .identificadorElectronico(a.getIdentificadorElectronico())
+              .proposito(a.getProposito())
+              .color(a.getColor())
+              .fechaNacimiento(a.getFechaNacimiento())
+              .observaciones(a.getObservaciones())
+              .genero(a.getGenero())
+              .tipoAnimal(a.getTipoAnimal())
+              .padre(a.getPadre())
+              .madre(a.getMadre())
+              .enfermedades(enfermedades)
+              .desarrollosCrecimiento(a.getDesarrollosCrecimiento())
+              .produccion(a.getProduccion())
+              .build();
+        })
+        .toList();
+    return animales;
+  }
+
+  public boolean insertProduccion(ProduccionForm produccion) {
+    var animalOpt = this.repository.findById(UUID.fromString(produccion.animalId()));
+    if (!animalOpt.isPresent()) {
+      return false;
+    }
+    Animal animal = animalOpt.get();
+    if (animal.getProduccion() == null) {
+      animal.setProduccion(new ArrayList<>());
+    }
+    animal.getProduccion().add(RegistroProduccion.builder()
+        .id(UUID.randomUUID())
+        .pesoLeche(produccion.pesoLeche())
+        .ureaLeche(produccion.ureaLeche())
+        .fechaRegistro(produccion.fechaRegistro())
+        .phLeche(produccion.phLeche())
+        .animal(animal)
+        .build());
+    this.repository.save(animal);
+    return true;
+  }
+
+  public List<RegistroProduccion> getAllProducciones() {
+    return this.registroProduccionRepository.findAllRegistrosConAnimal().stream().map(m -> {
+      var animal = new Animal();
+      animal.setCodigo(m.getAnimal().getCodigo());
+      animal.setEstablo(Establo.builder().id(m.getAnimal().getEstablo().getId()).build());
+      m.setAnimal(animal);
+      return m;
+    }).toList();
   }
 
   public boolean insertAnimalExtended(String establoId, AnimalExtended animal) {
-    // Implementation goes here
-    //
     var establoOpt = this.establoRepository.findById(UUID.fromString(establoId));
     if (!establoOpt.isPresent()) {
       return false;
@@ -215,6 +283,30 @@ public class AnimalService {
       return false;
     }
     this.repository.delete(animalOpt.get());
+    return true;
+  }
+
+  public boolean insertCrecimiento(DesarrolloCrecimientoForm desarrollo) {
+    var animalOpt = this.repository.findById(UUID.fromString(desarrollo.animalId()));
+    if (animalOpt.isEmpty()) {
+      return false;
+    }
+    var animal = animalOpt.get();
+    var desarrolloCrecimientos = animal.getDesarrollosCrecimiento();
+    if (desarrolloCrecimientos == null) {
+      desarrolloCrecimientos = new ArrayList<>();
+    }
+    desarrolloCrecimientos.add(
+        DesarrolloCrecimiento.builder()
+            .id(UUID.randomUUID())
+            .pesoActual(desarrollo.pesoActual())
+            .tamaño(desarrollo.tamaño())
+            .estado(desarrollo.estado())
+            .condicionCorporal(desarrollo.condicionCorporal())
+            .unidadesAnimal(desarrollo.unidadesAnimal())
+            .build());
+    animal.setDesarrollosCrecimiento(desarrolloCrecimientos);
+    this.repository.save(animal);
     return true;
   }
 }

@@ -1,5 +1,6 @@
 package zootecpro.backend.services;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -52,6 +53,20 @@ public class EstabloService {
 
   public List<Establo> getEstablos() {
     return establoRepository.findAll();
+  }
+
+  public boolean insertTrabajador(UUID establoId, Usuario usuario) {
+    var establoOpt = establoRepository.findById(establoId);
+    if (establoOpt.isEmpty()) {
+      return false;
+    }
+    var establo = establoOpt.get();
+    if (establo.getTrabajadores() == null) {
+      establo.setTrabajadores(new ArrayList<>());
+    }
+    establo.getTrabajadores().add(usuario);
+    this.establoRepository.save(establo);
+    return true;
   }
 
   public boolean updateEstablo(String id, EstabloForm establoForm) {

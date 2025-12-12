@@ -1,8 +1,10 @@
 package zootecpro.backend.models.enfermedad;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -22,17 +24,18 @@ import zootecpro.backend.models.establo.Animal;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(indexes = {
-    @Index(columnList = "nombre", name = "NombreEnfermedadIdx", unique = true)
+    @Index(columnList = "nombre", name = "NombreEnfermedadIdx")
 })
 @Entity
 public class Enfermedad {
   @Id
   public UUID id;
   private String nombre;
-  @OneToOne
+  @ManyToOne
   private TipoEnfermedad tipoEnfermedad;
-  @OneToMany
+  @OneToMany(cascade = CascadeType.ALL)
   private List<Tratamiento> tratamientos;
   @ManyToOne(fetch = FetchType.LAZY)
   private Animal animal;
+  private LocalDateTime fechaRegistro;
 }
