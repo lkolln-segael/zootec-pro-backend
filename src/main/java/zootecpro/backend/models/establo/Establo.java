@@ -48,6 +48,6 @@ public class Establo {
   @OneToMany(cascade = CascadeType.ALL)
   private List<Usuario> trabajadores;
 
-  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "establo")
+  @OneToMany(fetch = FetchType.LAZY, mappedBy = "establo")
   List<Animal> animales;
 }

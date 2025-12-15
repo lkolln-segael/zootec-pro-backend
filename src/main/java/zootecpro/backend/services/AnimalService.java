@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import io.jsonwebtoken.lang.Collections;
+import jakarta.persistence.EntityManager;
 import zootecpro.backend.models.crecimiento.DesarrolloCrecimiento;
 import zootecpro.backend.models.dto.AnimalExtended;
 import zootecpro.backend.models.dto.AnimalForm;
@@ -35,22 +36,24 @@ public class AnimalService {
   private final TipoAnimalRepository tipoAnimalRepository;
   private final EstabloRepository establoRepository;
   private final RegistroProduccionRepository registroProduccionRepository;
+  private final EntityManager entityManager;
 
+  @Transactional
   public boolean insertAnimal(String establoId, AnimalForm animal) {
     Optional<Establo> establoOpt = this.establoRepository.findById(UUID.fromString(establoId));
     if (establoOpt.isEmpty()) {
       return false;
     }
     Establo establo = establoOpt.get();
-
+    entityManager.detach(establo);
     Optional<TipoAnimal> tipoAnimalOpt = this.tipoAnimalRepository.findById(UUID.fromString(animal.idTipoAnimal));
     if (tipoAnimalOpt.isEmpty()) {
       return false;
     }
 
     TipoAnimal tipoAnimal = tipoAnimalOpt.get();
+    entityManager.detach(tipoAnimal);
     Animal animalModel = Animal.builder()
-        .id(UUID.randomUUID())
         .codigo(animal.codigo)
         .descripcion(animal.descripcion)
         .identificadorElectronico(animal.identificadorElectronico)
@@ -64,18 +67,15 @@ public class AnimalService {
         .build();
 
     if (animal.idMadre != null) {
-      Optional<Animal> madreOpt = repository.findById(UUID.fromString(animal.idMadre.get()));
-      if (madreOpt.isPresent()) {
-        animalModel.setMadre(madreOpt.get());
-      }
+      Animal madreReference = repository.getReferenceById(UUID.fromString(animal.idMadre.get()));
+      animalModel.setMadre(madreReference);
     }
+
     if (animal.idPadre != null) {
-      Optional<Animal> padreOpt = repository.findById(UUID.fromString(animal.idPadre.get()));
-      if (padreOpt.isPresent()) {
-        animalModel.setPadre(padreOpt.get());
-      }
+      Animal padreReference = repository.getReferenceById(UUID.fromString(animal.idPadre.get()));
+      animalModel.setPadre(padreReference);
     }
-    repository.save(animalModel);
+    this.repository.save(animalModel);
     return true;
   }
 

@@ -1,5 +1,6 @@
 package zootecpro.backend.services;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -11,14 +12,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.lang.Collections;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import zootecpro.backend.models.Rol;
 import zootecpro.backend.models.Usuario;
+import zootecpro.backend.models.dto.InsertTrabajador;
 import zootecpro.backend.models.dto.InsertUsuario;
 import zootecpro.backend.models.dto.UsuarioSimplified;
+import zootecpro.backend.models.establo.Establo;
 import zootecpro.backend.repositories.*;
 
 @Slf4j
@@ -151,6 +151,34 @@ public class UsuarioService implements UserDetailsService {
     }
   }
 
+  public String insertTrabajador(InsertTrabajador trabajador, UUID establoId) {
+    Optional<Establo> establoOpt = establoRepository.findById(establoId);
+    if (establoOpt.isEmpty()) {
+      return "Establo no encontrado";
+    }
+    var establo = establoOpt.get();
+    var trabajadores = establo.getTrabajadores();
+    if (trabajadores == null) {
+      trabajadores = new ArrayList<>();
+    }
+    log.info(trabajador.toString());
+    var rolOpt = rolRepository.findById(UUID.fromString(trabajador.getIdRol()));
+    if (rolOpt.isEmpty()) {
+      return "Rol no encontrado";
+    }
+    var rol = rolOpt.get();
+    trabajadores.add(Usuario.builder()
+        .id(UUID.randomUUID())
+        .activo(true)
+        .nombre(trabajador.getNombre())
+        .nombreUsuario(trabajador.getNombreUsuario())
+        .rol(rol)
+        .build());
+    establo.setTrabajadores(trabajadores);
+    establoRepository.save(establo);
+    return "Trabajador en el establo";
+  }
+
   public List<UsuarioSimplified> getTrabajadores(UUID establoId) {
     var establoOpt = this.establoRepository.findById(establoId);
     if (establoOpt.isEmpty()) {
@@ -162,6 +190,7 @@ public class UsuarioService implements UserDetailsService {
         .map(e -> UsuarioSimplified.builder()
             .id(e.getId())
             .nombre(e.getNombre())
+            .nombreUsuario(e.getNombreUsuario())
             .rol(e.getRol())
             .build())
         .toList();

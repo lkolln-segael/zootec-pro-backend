@@ -1,6 +1,8 @@
 package zootecpro.backend.config;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.CharBuffer;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,7 +34,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     // Extraer token del header Authorization
     String authHeader = request.getHeader("Authorization");
-
     if (authHeader == null || !authHeader.startsWith("Bearer ")) {
       filterChain.doFilter(request, response);
       return;

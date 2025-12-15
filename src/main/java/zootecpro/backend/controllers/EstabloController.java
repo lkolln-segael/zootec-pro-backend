@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import zootecpro.backend.models.Rol;
@@ -21,6 +22,7 @@ import zootecpro.backend.models.Usuario;
 import zootecpro.backend.models.api.ApiResponse;
 import zootecpro.backend.models.dto.EstabloForm;
 import zootecpro.backend.models.dto.EstabloSimplified;
+import zootecpro.backend.models.dto.InsertTrabajador;
 import zootecpro.backend.models.dto.UsuarioSimplified;
 import zootecpro.backend.models.establo.Establo;
 import zootecpro.backend.services.EstabloService;

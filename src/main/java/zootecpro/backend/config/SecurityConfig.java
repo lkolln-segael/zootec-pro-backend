@@ -20,9 +20,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import lombok.RequiredArgsConstructor;
-import zootecpro.backend.services.UsuarioService;
-
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -34,7 +31,21 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain adminFilterChain(HttpSecurity http) throws Exception {
       http
-          .cors(cors -> cors.disable())
+          .cors(cors -> {
+            CorsConfiguration configuration = new CorsConfiguration();
+            configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+            configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+            configuration
+                .setAllowedHeaders(
+                    Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Cache-Control"));
+            configuration.setExposedHeaders(Arrays.asList(
+                "Authorization", "Cache-Control", "ETag", "Last-Modified"));
+
+            UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+            source.registerCorsConfiguration("/api/**", configuration);
+            source.registerCorsConfiguration("/admin/**", configuration);
+            cors.configurationSource(source);
+          })
           .securityMatcher("/admin/**")
           .authorizeHttpRequests(authorize -> authorize
               .requestMatchers("/admin/login", "/admin/css/**").permitAll()
@@ -70,7 +81,23 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
       http
-          .cors(cors -> cors.disable())
+          .cors(cors -> {
+            CorsConfiguration configuration = new CorsConfiguration();
+            configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+            configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+            configuration
+                .setAllowedHeaders(
+                    Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Cache-Control"));
+            configuration.setExposedHeaders(Arrays.asList(
+                "Authorization", "Cache-Control", "ETag", "Last-Modified"));
+
+            configuration.setAllowCredentials(true);
+
+            UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+            source.registerCorsConfiguration("/api/**", configuration);
+            source.registerCorsConfiguration("/admin/**", configuration);
+            cors.configurationSource(source);
+          })
           .securityMatcher("/api/**")
           .authorizeHttpRequests(authorize -> authorize
               .requestMatchers("/api/login", "/api/register").permitAll()

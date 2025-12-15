@@ -7,15 +7,20 @@ import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import zootecpro.backend.models.Usuario;
-import zootecpro.backend.models.api.ApiResponse;
+import zootecpro.backend.models.dto.InsertTrabajador;
 import zootecpro.backend.models.dto.InsertUsuario;
 import zootecpro.backend.models.dto.LoginUsuario;
 import zootecpro.backend.models.dto.UsuarioSimplified;
@@ -24,6 +29,7 @@ import zootecpro.backend.services.RolService;
 
 @RequiredArgsConstructor
 @RestController
+@Controller
 @Slf4j
 @Tag(name = "Usuario", description = "API de gestión de usuarios")
 public class UsuarioController {
@@ -33,7 +39,7 @@ public class UsuarioController {
 
   @PostMapping("/api/register")
   @Operation(summary = "Registrar nuevo usuario")
-  public ResponseEntity<String> register(@RequestBody InsertUsuario usuario) { // ✅ Import correcto
+  public ResponseEntity<String> register(@RequestBody InsertUsuario usuario) {
     try {
       usuarioService.insertUsuario(usuario);
       return ResponseEntity.status(201).body("Usuario registrado con éxito");
@@ -46,14 +52,23 @@ public class UsuarioController {
   @Operation(summary = "Realizar inicio de sesion")
   public ResponseEntity<Map<String, String>> login(@RequestBody LoginUsuario usuario) {
     try {
+      IO.println(usuario.nombreUsuario);
       String token = usuarioService.verifyUsuario(usuario.nombreUsuario, usuario.contraseña);
-
       return ResponseEntity.ok(Map.of("token", token));
     } catch (UsernameNotFoundException user) {
       return ResponseEntity.status(401).body(Map.of("error", user.getMessage()));
     } catch (Exception e) {
       return ResponseEntity.status(500).body(Map.of("error", "Error al logear el usuario: " + e.getMessage()));
     }
+  }
+
+  @PostMapping("/api/users/add")
+  public ResponseEntity<String> insertUsuarioToEstablo(@RequestBody String trabajador,
+      @RequestParam String establoId) {
+    // return ResponseEntity.ok(this.usuarioService.insertTrabajador(trabajador,
+    // UUID.fromString(establoId)));
+    IO.println(trabajador);
+    return ResponseEntity.ok("Ok pls");
   }
 
   @GetMapping("/api/users")
