@@ -29,7 +29,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import zootecpro.backend.models.crecimiento.DesarrolloCrecimiento;
 import zootecpro.backend.models.enfermedad.Enfermedad;
-import zootecpro.backend.models.registros.RegistroProduccion;
+import zootecpro.backend.models.registros.RegistroProduccionLeche;
+import zootecpro.backend.models.registros.RegistroReproduccion;
 
 @Entity
 @Table(indexes = {
@@ -98,5 +99,8 @@ public class Animal implements Cloneable {
   private List<DesarrolloCrecimiento> desarrollosCrecimiento;
 
   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-  private List<RegistroProduccion> produccion;
+  private List<RegistroProduccionLeche> produccionLeche;
+
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  private List<RegistroReproduccion> reproducciones;
 }

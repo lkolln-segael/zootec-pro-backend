@@ -21,10 +21,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import zootecpro.backend.models.api.ApiResponse;
-import zootecpro.backend.models.dto.AnimalExtended;
-import zootecpro.backend.models.dto.AnimalForm;
-import zootecpro.backend.models.dto.DesarrolloCrecimientoForm;
-import zootecpro.backend.models.dto.TipoAnimalForm;
+import zootecpro.backend.models.dto.animal.AnimalExtended;
+import zootecpro.backend.models.dto.animal.AnimalForm;
+import zootecpro.backend.models.dto.animal.DesarrolloCrecimientoForm;
+import zootecpro.backend.models.dto.animal.TipoAnimalForm;
 import zootecpro.backend.models.establo.Animal;
 import zootecpro.backend.models.establo.TipoAnimal;
 import zootecpro.backend.services.AnimalService;
@@ -37,6 +37,58 @@ import zootecpro.backend.services.AnimalService;
 public class AnimalController {
 
   private final AnimalService service;
+
+  @GetMapping("/api/animales/tipo/list")
+  public ResponseEntity<ApiResponse<List<TipoAnimal>>> getTipoAnimalesApi() {
+    List<TipoAnimal> tiposAnimal = service.getAllTiposAnimal();
+    ApiResponse<List<TipoAnimal>> response = ApiResponse.<List<TipoAnimal>>builder()
+        .data(tiposAnimal)
+        .build();
+    return ResponseEntity.ok(response);
+  }
+
+  @PostMapping("/api/animales/add/extended")
+  public ResponseEntity<ApiResponse<String>> insertAnimalExtendedApi(@RequestParam String establoId,
+      @RequestBody AnimalExtended animalExtended) {
+    this.service.insertAnimalExtended(establoId, animalExtended);
+    ApiResponse<String> response = ApiResponse.<String>builder()
+        .message("Animal creado con éxito")
+        .build();
+    return ResponseEntity.ok(response);
+  }
+
+  @GetMapping("/api/animales/all")
+  public ResponseEntity<ApiResponse<List<Animal>>> getAllAnimalesApi(
+      @RequestParam String establoId, @RequestParam Optional<Integer> año) {
+    var añoValue = año.isPresent() ? año.get() : 9999;
+    var animales = service.getAllAnimals(establoId);
+    return ResponseEntity.ok(
+        ApiResponse.<List<Animal>>builder()
+            .data(animales.stream()
+                .filter(
+                    a -> año != null && a.getFechaNacimiento().isBefore(LocalDateTime.of(añoValue + 1, 1, 1, 0, 0, 0)))
+                .toList())
+            .build());
+  }
+
+  @PostMapping("/api/animales/add")
+  public ResponseEntity<ApiResponse<String>> insertAnimalApi(@RequestParam String establoId,
+      @RequestBody AnimalForm animalForm) {
+    this.service.insertAnimal(establoId, animalForm);
+    ApiResponse<String> response = ApiResponse.<String>builder()
+        .message("Animal creado con éxito")
+        .build();
+    return ResponseEntity.ok(response);
+  }
+
+  @PostMapping("/api/animales/desarrollo/add")
+  public ResponseEntity<ApiResponse<String>> insertarDesarrolloAnimal(
+      @RequestBody DesarrolloCrecimientoForm desarrollo) {
+    this.service.insertCrecimiento(desarrollo);
+    return ResponseEntity.ok(ApiResponse.<String>builder()
+        .data("Desarrollo crecimiento insertado con exito")
+        .build());
+  }
 
   @GetMapping("/admin/animales")
   public ModelAndView getAnimales() {
@@ -144,61 +196,10 @@ public class AnimalController {
     return model;
   }
 
-  @GetMapping("/api/animales/tipo/list")
-  public ResponseEntity<ApiResponse<List<TipoAnimal>>> getTipoAnimalesApi() {
-    List<TipoAnimal> tiposAnimal = service.getAllTiposAnimal();
-    ApiResponse<List<TipoAnimal>> response = ApiResponse.<List<TipoAnimal>>builder()
-        .data(tiposAnimal)
-        .build();
-    return ResponseEntity.ok(response);
-  }
-
-  @PostMapping("/api/animales/add/extended")
-  public ResponseEntity<ApiResponse<String>> insertAnimalExtendedApi(@RequestParam String establoId,
-      @RequestBody AnimalExtended animalExtended) {
-    this.service.insertAnimalExtended(establoId, animalExtended);
-    ApiResponse<String> response = ApiResponse.<String>builder()
-        .message("Animal creado con éxito")
-        .build();
-    return ResponseEntity.ok(response);
-  }
-
-  @GetMapping("/api/animales/all")
-  public ResponseEntity<ApiResponse<List<Animal>>> getAllAnimalesApi(
-      @RequestParam String establoId, @RequestParam Optional<Integer> año) {
-    var añoValue = año.isPresent() ? año.get() : 9999;
-    var animales = service.getAllAnimals(establoId);
-    return ResponseEntity.ok(
-        ApiResponse.<List<Animal>>builder()
-            .data(animales.stream()
-                .filter(
-                    a -> año != null && a.getFechaNacimiento().isBefore(LocalDateTime.of(añoValue + 1, 1, 1, 0, 0, 0)))
-                .toList())
-            .build());
-  }
-
-  @PostMapping("/api/animales/add")
-  public ResponseEntity<ApiResponse<String>> insertAnimalApi(@RequestParam String establoId,
-      @RequestBody AnimalForm animalForm) {
-    this.service.insertAnimal(establoId, animalForm);
-    ApiResponse<String> response = ApiResponse.<String>builder()
-        .message("Animal creado con éxito")
-        .build();
-    return ResponseEntity.ok(response);
-  }
-
   @DeleteMapping("/admin/animales/delete/{id}")
   public ModelAndView deleteAnimalApi(@PathVariable String id) {
     this.service.deleteAnimal(id);
     return new ModelAndView("redirect:/admin/establos");
   }
 
-  @PostMapping("/api/animales/desarrollo/add")
-  public ResponseEntity<ApiResponse<String>> insertarDesarrolloAnimal(
-      @RequestBody DesarrolloCrecimientoForm desarrollo) {
-    this.service.insertCrecimiento(desarrollo);
-    return ResponseEntity.ok(ApiResponse.<String>builder()
-        .data("Desarrollo crecimiento insertado con exito")
-        .build());
-  }
 }

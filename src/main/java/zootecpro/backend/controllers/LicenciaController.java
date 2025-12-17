@@ -14,7 +14,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import zootecpro.backend.models.dto.LicenciaForm;
+import zootecpro.backend.models.dto.usuario.LicenciaForm;
 import zootecpro.backend.services.LicenciaService;
 
 @Controller

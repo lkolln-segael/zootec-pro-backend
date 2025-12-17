@@ -20,6 +20,14 @@ configurations {
 	}
 }
 
+sourceSets {
+    main {
+        resources {
+            srcDirs += 'src/resources/frontend'
+        }
+    }
+}
+
 repositories {
 	mavenCentral()
 }

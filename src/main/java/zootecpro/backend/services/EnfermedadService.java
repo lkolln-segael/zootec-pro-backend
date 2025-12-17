@@ -12,11 +12,11 @@ import org.springframework.stereotype.Service;
 import io.jsonwebtoken.lang.Collections;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import zootecpro.backend.models.dto.EnfermedadAnimalForm;
-import zootecpro.backend.models.dto.EnfermedadForm;
-import zootecpro.backend.models.dto.SintomaForm;
-import zootecpro.backend.models.dto.TipoEnfermedadForm;
-import zootecpro.backend.models.dto.TratamientoForm;
+import zootecpro.backend.models.dto.sanidad.EnfermedadAnimalForm;
+import zootecpro.backend.models.dto.sanidad.EnfermedadForm;
+import zootecpro.backend.models.dto.sanidad.SintomaForm;
+import zootecpro.backend.models.dto.sanidad.TipoEnfermedadForm;
+import zootecpro.backend.models.dto.sanidad.TratamientoForm;
 import zootecpro.backend.models.enfermedad.Enfermedad;
 import zootecpro.backend.models.enfermedad.Sintoma;
 import zootecpro.backend.models.enfermedad.TipoEnfermedad;
@@ -24,11 +24,11 @@ import zootecpro.backend.models.enfermedad.TipoTratamiento;
 import zootecpro.backend.models.enfermedad.Tratamiento;
 import zootecpro.backend.models.establo.Animal;
 import zootecpro.backend.models.establo.TipoAnimal;
-import zootecpro.backend.repositories.AnimalRepository;
-import zootecpro.backend.repositories.EnfermedadRepository;
-import zootecpro.backend.repositories.TipoAnimalRepository;
-import zootecpro.backend.repositories.TipoEnfermedadRepository;
-import zootecpro.backend.repositories.TipoTratamientoRepository;
+import zootecpro.backend.repositories.animal.AnimalRepository;
+import zootecpro.backend.repositories.animal.TipoAnimalRepository;
+import zootecpro.backend.repositories.sanidad.EnfermedadRepository;
+import zootecpro.backend.repositories.sanidad.TipoEnfermedadRepository;
+import zootecpro.backend.repositories.sanidad.TipoTratamientoRepository;
 
 @Service
 @Slf4j

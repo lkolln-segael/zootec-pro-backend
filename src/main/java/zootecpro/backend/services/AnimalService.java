@@ -10,22 +10,22 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import io.jsonwebtoken.lang.Collections;
 import jakarta.persistence.EntityManager;
 import zootecpro.backend.models.crecimiento.DesarrolloCrecimiento;
-import zootecpro.backend.models.dto.AnimalExtended;
-import zootecpro.backend.models.dto.AnimalForm;
-import zootecpro.backend.models.dto.DesarrolloCrecimientoForm;
-import zootecpro.backend.models.dto.EnfermedadAnimalForm;
-import zootecpro.backend.models.dto.ProduccionForm;
-import zootecpro.backend.models.dto.TipoAnimalForm;
+import zootecpro.backend.models.dto.animal.AnimalExtended;
+import zootecpro.backend.models.dto.animal.AnimalForm;
+import zootecpro.backend.models.dto.animal.DesarrolloCrecimientoForm;
+import zootecpro.backend.models.dto.animal.ProduccionForm;
+import zootecpro.backend.models.dto.animal.TipoAnimalForm;
 import zootecpro.backend.models.enfermedad.Enfermedad;
 import zootecpro.backend.models.establo.Animal;
 import zootecpro.backend.models.establo.Establo;
 import zootecpro.backend.models.establo.TipoAnimal;
-import zootecpro.backend.models.registros.RegistroProduccion;
+import zootecpro.backend.models.registros.RegistroProduccionLeche;
 import zootecpro.backend.repositories.*;
-
+import zootecpro.backend.repositories.animal.AnimalRepository;
+import zootecpro.backend.repositories.animal.RegistroProduccionLecheRepository;
+import zootecpro.backend.repositories.animal.TipoAnimalRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -35,7 +35,7 @@ public class AnimalService {
   private final AnimalRepository repository;
   private final TipoAnimalRepository tipoAnimalRepository;
   private final EstabloRepository establoRepository;
-  private final RegistroProduccionRepository registroProduccionRepository;
+  private final RegistroProduccionLecheRepository registroProduccionRepository;
   private final EntityManager entityManager;
 
   @Transactional
@@ -182,7 +182,7 @@ public class AnimalService {
                     .build();
               })
               .toList();
-          var produccion = a.getProduccion();
+          var produccion = a.getProduccionLeche();
           produccion.forEach(p -> p.setAnimal(null));
           return Animal.builder()
               .id(a.getId())
@@ -199,7 +199,7 @@ public class AnimalService {
               .madre(a.getMadre())
               .enfermedades(enfermedades)
               .desarrollosCrecimiento(a.getDesarrollosCrecimiento())
-              .produccion(a.getProduccion())
+              .produccionLeche(a.getProduccionLeche())
               .build();
         })
         .toList();
@@ -212,12 +212,12 @@ public class AnimalService {
       return false;
     }
     Animal animal = animalOpt.get();
-    if (animal.getProduccion() == null) {
-      animal.setProduccion(new ArrayList<>());
+    if (animal.getProduccionLeche() == null) {
+      animal.setProduccionLeche(new ArrayList<>());
     }
-    animal.getProduccion().add(RegistroProduccion.builder()
+    animal.getProduccionLeche().add(RegistroProduccionLeche.builder()
         .id(UUID.randomUUID())
-        .pesoLeche(produccion.pesoLeche())
+        .litrosLeche(produccion.pesoLeche())
         .ureaLeche(produccion.ureaLeche())
         .fechaRegistro(produccion.fechaRegistro())
         .phLeche(produccion.phLeche())
@@ -227,7 +227,7 @@ public class AnimalService {
     return true;
   }
 
-  public List<RegistroProduccion> getAllProducciones() {
+  public List<RegistroProduccionLeche> getAllProducciones() {
     return this.registroProduccionRepository.findAllRegistrosConAnimal().stream().map(m -> {
       var animal = new Animal();
       animal.setCodigo(m.getAnimal().getCodigo());

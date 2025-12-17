@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import zootecpro.backend.models.Licencia;
-import zootecpro.backend.models.dto.LicenciaForm;
+import zootecpro.backend.models.dto.usuario.LicenciaForm;
 import zootecpro.backend.repositories.LicenciaRepository;
 
 @Service

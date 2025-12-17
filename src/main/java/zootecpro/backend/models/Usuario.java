@@ -14,6 +14,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -36,7 +37,7 @@ public class Usuario implements UserDetails {
   private String nombreUsuario;
   private String contraseña;
   private String correo;
-  @OneToOne(fetch = FetchType.EAGER)
+  @ManyToOne(fetch = FetchType.EAGER)
   private Rol rol;
   @OneToOne(fetch = FetchType.LAZY)
   private Licencia licencia;

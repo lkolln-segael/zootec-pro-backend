@@ -1,5 +1,6 @@
 package zootecpro.backend.services;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -15,9 +16,9 @@ import io.jsonwebtoken.lang.Collections;
 import lombok.extern.slf4j.Slf4j;
 import zootecpro.backend.models.Rol;
 import zootecpro.backend.models.Usuario;
-import zootecpro.backend.models.dto.InsertTrabajador;
-import zootecpro.backend.models.dto.InsertUsuario;
-import zootecpro.backend.models.dto.UsuarioSimplified;
+import zootecpro.backend.models.dto.usuario.InsertTrabajador;
+import zootecpro.backend.models.dto.usuario.InsertUsuario;
+import zootecpro.backend.models.dto.usuario.UsuarioSimplified;
 import zootecpro.backend.models.establo.Establo;
 import zootecpro.backend.repositories.*;
 
@@ -133,6 +134,9 @@ public class UsuarioService implements UserDetailsService {
         .contraseña(encryptPassword(usuarioDto.contraseña))
         .nombreUsuario(usuarioDto.nombreUsuario)
         .nombre(usuarioDto.nombre)
+        .fechaCreacion(LocalDate.now())
+        .activo(true)
+        .fechaModificacion(LocalDate.now())
         .rol(rol)
         .build();
     repository.save(usuario);
@@ -172,6 +176,48 @@ public class UsuarioService implements UserDetailsService {
         .activo(true)
         .nombre(trabajador.getNombre())
         .nombreUsuario(trabajador.getNombreUsuario())
+        .fechaCreacion(LocalDate.now())
+        .fechaModificacion(LocalDate.now())
+        .rol(rol)
+        .build());
+    establo.setTrabajadores(trabajadores);
+    establoRepository.save(establo);
+    return "Trabajador en el establo";
+  }
+
+  public String editTrabajador(InsertTrabajador trabajador, UUID establoId, UUID usuarioId) {
+    Optional<Establo> establoOpt = establoRepository.findById(establoId);
+    if (establoOpt.isEmpty()) {
+      return "Establo no encontrado";
+    }
+    var establo = establoOpt.get();
+    var trabajadores = establo.getTrabajadores();
+    if (trabajadores == null) {
+      return "No hay trabajadores";
+    }
+    var rolOpt = rolRepository.findById(UUID.fromString(trabajador.getIdRol()));
+    if (rolOpt.isEmpty()) {
+      return "Rol no encontrado";
+    }
+    var rol = rolOpt.get();
+    int index = -1;
+    for (int i = 0; i < trabajadores.size(); i++) {
+      var usuario = trabajadores.get(i);
+      if (usuario.getId().equals(usuarioId)) {
+        index = i;
+        break;
+      }
+    }
+    if (index == -1) {
+      return "Trabajador no encontrado";
+    }
+
+    trabajadores.set(index, Usuario.builder()
+        .id(usuarioId)
+        .activo(true)
+        .nombre(trabajador.getNombre())
+        .fechaModificacion(LocalDate.now())
+        .nombreUsuario(trabajador.getNombreUsuario())
         .rol(rol)
         .build());
     establo.setTrabajadores(trabajadores);
@@ -191,6 +237,7 @@ public class UsuarioService implements UserDetailsService {
             .id(e.getId())
             .nombre(e.getNombre())
             .nombreUsuario(e.getNombreUsuario())
+            .fechaCreacion(e.getFechaCreacion())
             .rol(e.getRol())
             .build())
         .toList();

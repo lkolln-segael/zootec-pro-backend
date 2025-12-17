@@ -40,7 +40,6 @@ public class SecurityConfig {
                     Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Cache-Control"));
             configuration.setExposedHeaders(Arrays.asList(
                 "Authorization", "Cache-Control", "ETag", "Last-Modified"));
-
             UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
             source.registerCorsConfiguration("/api/**", configuration);
             source.registerCorsConfiguration("/admin/**", configuration);

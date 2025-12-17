@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import io.jsonwebtoken.lang.Collections;
 import lombok.RequiredArgsConstructor;
 import zootecpro.backend.models.api.ApiResponse;
-import zootecpro.backend.models.dto.ProduccionForm;
-import zootecpro.backend.models.registros.RegistroProduccion;
+import zootecpro.backend.models.dto.animal.ProduccionForm;
+import zootecpro.backend.models.registros.RegistroProduccionLeche;
 import zootecpro.backend.services.AnimalService;
 
 @Controller
@@ -27,8 +27,8 @@ public class ProduccionController {
   private final AnimalService animalService;
 
   @GetMapping("/api/produccion/list")
-  public ResponseEntity<ApiResponse<List<RegistroProduccion>>> getAllProduccion() {
-    return ResponseEntity.ok(ApiResponse.<List<RegistroProduccion>>builder().data(
+  public ResponseEntity<ApiResponse<List<RegistroProduccionLeche>>> getAllProduccion() {
+    return ResponseEntity.ok(ApiResponse.<List<RegistroProduccionLeche>>builder().data(
         this.animalService.getAllProducciones()).build());
   }
 
@@ -39,14 +39,14 @@ public class ProduccionController {
   }
 
   @GetMapping("/api/produccion/lechera")
-  public ResponseEntity<ApiResponse<List<RegistroProduccion>>> getProduccionByAño(@RequestParam String establoId,
+  public ResponseEntity<ApiResponse<List<RegistroProduccionLeche>>> getProduccionByAño(@RequestParam String establoId,
       @RequestParam Integer año) {
     var produccion = this.animalService.getAllProducciones()
         .stream()
         .filter(p -> p.getAnimal().getEstablo().getId().equals(UUID.fromString(establoId))
             && p.getFechaRegistro().isAfter(LocalDateTime.of(año, 1, 1, 0, 0, 0)))
         .toList();
-    return ResponseEntity.ok(ApiResponse.<List<RegistroProduccion>>builder()
+    return ResponseEntity.ok(ApiResponse.<List<RegistroProduccionLeche>>builder()
         .data(produccion)
         .build());
   }

@@ -5,25 +5,30 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import zootecpro.backend.models.Usuario;
-import zootecpro.backend.models.dto.InsertTrabajador;
-import zootecpro.backend.models.dto.InsertUsuario;
-import zootecpro.backend.models.dto.LoginUsuario;
-import zootecpro.backend.models.dto.UsuarioSimplified;
+import zootecpro.backend.models.dto.usuario.InsertTrabajador;
+import zootecpro.backend.models.dto.usuario.InsertUsuario;
+import zootecpro.backend.models.dto.usuario.LoginUsuario;
+import zootecpro.backend.models.dto.usuario.UsuarioSimplified;
 import zootecpro.backend.services.UsuarioService;
 import zootecpro.backend.services.RolService;
 
@@ -63,12 +68,30 @@ public class UsuarioController {
   }
 
   @PostMapping("/api/users/add")
-  public ResponseEntity<String> insertUsuarioToEstablo(@RequestBody String trabajador,
+  public ResponseEntity<String> insertUsuarioToEstablo(@RequestBody InsertTrabajador trabajador,
       @RequestParam String establoId) {
-    // return ResponseEntity.ok(this.usuarioService.insertTrabajador(trabajador,
-    // UUID.fromString(establoId)));
-    IO.println(trabajador);
-    return ResponseEntity.ok("Ok pls");
+    return ResponseEntity.ok(this.usuarioService.insertTrabajador(trabajador,
+        UUID.fromString(establoId)));
+  }
+
+  @PutMapping("/api/users/edit/{usuarioId}")
+  public ResponseEntity<String> editUsuarioToEstablo(@RequestParam String establoId,
+      @PathVariable("usuarioId") String usuarioId,
+      @RequestBody InsertTrabajador trabajador) {
+    try {
+      log.info("Editing usuario {} for establo {}", usuarioId, establoId);
+      String result = this.usuarioService.editTrabajador(trabajador, UUID.fromString(establoId),
+          UUID.fromString(usuarioId));
+      log.info("Edit result: {}", result);
+      return ResponseEntity.ok(result);
+    } catch (IllegalArgumentException e) {
+      log.info("Invalid UUID format: {}", e.getMessage());
+      return ResponseEntity.badRequest().body("Invalid ID format");
+    } catch (Exception e) {
+      log.error("Error editing trabajador: ", e); // Fixed the stack trace logging
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body("Error en el servidor: " + e.getMessage());
+    }
   }
 
   @GetMapping("/api/users")
