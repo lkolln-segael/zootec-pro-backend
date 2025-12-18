@@ -1,5 +1,6 @@
 package zootecpro.backend.repositories.reproduccion;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,5 +10,7 @@ import zootecpro.backend.models.registros.Parto;
 
 @Repository
 public interface PartoRepository extends JpaRepository<Parto, UUID> {
+
+  Optional<Parto> findByRegistroReproduccionId(UUID id);
 
 }

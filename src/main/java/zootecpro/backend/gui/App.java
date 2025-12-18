@@ -30,7 +30,7 @@ import com.sun.net.httpserver.HttpServer;
 public class App extends JFrame {
 
   private JLabel springLabelState = new JLabel("No iniciado el servidor de backend");
-  private JLabel springLabelFrontendState = new JLabel("No iniciado el servidor de backend");
+  private JLabel springLabelFrontendState = new JLabel("No iniciado el servidor de frontend");
 
   private JButton springStartButton = new JButton("Iniciar Servidor de spring");
   private JButton springCloseButton = new JButton("Cerrar Servidor de spring");

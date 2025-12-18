@@ -200,6 +200,7 @@ public class AnimalService {
               .enfermedades(enfermedades)
               .desarrollosCrecimiento(a.getDesarrollosCrecimiento())
               .produccionLeche(a.getProduccionLeche())
+              .reproducciones(a.getReproducciones())
               .build();
         })
         .toList();

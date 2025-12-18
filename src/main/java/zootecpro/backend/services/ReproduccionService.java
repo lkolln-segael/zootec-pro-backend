@@ -2,10 +2,20 @@ package zootecpro.backend.services;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import lombok.RequiredArgsConstructor;
 import zootecpro.backend.models.dto.reproduccion.AbortoForm;
@@ -13,6 +23,7 @@ import zootecpro.backend.models.dto.reproduccion.ConfirmacionPrenezForm;
 import zootecpro.backend.models.dto.reproduccion.PartoForm;
 import zootecpro.backend.models.dto.reproduccion.PrenezForm;
 import zootecpro.backend.models.dto.reproduccion.SecaForm;
+import zootecpro.backend.models.establo.Animal;
 import zootecpro.backend.models.registros.Aborto;
 import zootecpro.backend.models.registros.ConfirmacionPrenez;
 import zootecpro.backend.models.registros.Parto;
@@ -194,7 +205,104 @@ public class ReproduccionService {
     return true;
   }
 
-  public boolean eliminarRegistroReproduccion() {
+  public ArrayNode getRegistroReproduccionAnimal(String animalId) {
+    var animalOpt = this.animalRepository.findById(UUID.fromString(animalId));
+    if (animalOpt.isEmpty()) {
+      return null;
+    }
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.registerModule(new JavaTimeModule());
+    mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+    mapper.setDefaultPropertyInclusion(
+        JsonInclude.Value.construct(JsonInclude.Include.ALWAYS, JsonInclude.Include.NON_NULL));
+    ArrayNode array = mapper.createArrayNode();
+    var animal = animalOpt.get();
+    var reproducciones = animal.getReproducciones();
+    if (reproducciones == null) {
+      return array;
+    }
+    Collections.sort(reproducciones, (a, b) -> b.getFechaRegistro().compareTo(a.getFechaRegistro()));
+    for (RegistroReproduccion reg : reproducciones) {
+      Optional<Seca> secaOpt = secaRepository.findByRegistroReproduccionId(reg.getId());
+      if (secaOpt.isPresent()) {
+        var seca = secaOpt.get();
+        var node = mapper.createObjectNode();
+        node.put("tipo", "SECA");
+        node.put("id", seca.getId().toString());
+        node.put("motivo", seca.getMotivo());
+        node.put("fechaRegistro", reg.getFechaRegistro().toString());
+        array.add(node);
+        continue;
+      }
+      Optional<Prenez> prenezOpt = prenezRepository.findByRegistroReproduccionId(reg.getId());
+      if (prenezOpt.isPresent()) {
+        var prenez = prenezOpt.get();
+        var node = mapper.createObjectNode();
+        var padre = prenez.getPadre();
+        var madre = prenez.getMadre();
+        if (padre != null) {
+          padre.setEstablo(null);
+          padre.setEnfermedades(null);
+          padre.setDesarrollosCrecimiento(null);
+        }
+        if (madre != null) {
+          madre.setEstablo(null);
+          madre.setEnfermedades(null);
+          madre.setDesarrollosCrecimiento(null);
+        }
+        ObjectNode madreNode = mapper.valueToTree(prenez.getMadre());
+        ObjectNode padreNode = mapper.valueToTree(prenez.getPadre());
+        node.put("tipo", "PRENEZ");
+        node.put("id", prenez.getId().toString());
+        node.put("fechaCelo", prenez.getFechaCelo().toString());
+        node.put("madre", madreNode);
+        node.put("padre", padreNode);
+        node.put("fechaInseminacion", prenez.getFechaInseminacion().toString());
+        node.put("fechaDiagnostico", prenez.getFechaDiagnostico().toString());
+        node.put("fechaRegistro", reg.getFechaRegistro().toString());
+        array.add(node);
+        continue;
+      }
+      Optional<ConfirmacionPrenez> confirmacionOpt = confirmacionPrenezRepository
+          .findByRegistroReproduccionId(reg.getId());
+      if (confirmacionOpt.isPresent()) {
+        var confirmacion = confirmacionOpt.get();
+        var node = mapper.createObjectNode();
+        node.put("tipo", "CONFIRMACION_PRENEZ");
+        node.put("id", confirmacion.getId().toString());
+        node.put("tipoConfirmacion", confirmacion.getTipo().toString());
+        node.put("fechaRegistro", reg.getFechaRegistro().toString());
+        array.add(node);
+        continue;
+      }
+      Optional<Aborto> abortoOpt = abortoRepository.findByRegistroReproduccionId(reg.getId());
+      if (abortoOpt.isPresent()) {
+        var aborto = abortoOpt.get();
+        var node = mapper.createObjectNode();
+        node.put("tipo", "ABORTO");
+        node.put("id", aborto.getId().toString());
+        node.put("tipoAborto", aborto.getTipo());
+        node.put("fechaRegistro", reg.getFechaRegistro().toString());
+        array.add(node);
+        continue;
+      }
+      Optional<Parto> partoOpt = partoRepository.findByRegistroReproduccionId(reg.getId());
+      if (partoOpt.isPresent()) {
+        var parto = partoOpt.get();
+        var node = mapper.createObjectNode();
+        node.put("tipo", "PARTO");
+        node.put("id", parto.getId().toString());
+        node.put("numero", parto.getNumero());
+        node.put("fechaRegistro", reg.getFechaRegistro().toString());
+        array.add(node);
+        continue;
+      }
+    }
+
+    return array;
+  }
+
+  public boolean eliminarRegistroReproduccion(UUID registroId, String animalId) {
     return false;
   }
 }
