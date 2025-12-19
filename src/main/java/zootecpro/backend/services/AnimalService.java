@@ -218,7 +218,7 @@ public class AnimalService {
     }
     animal.getProduccionLeche().add(RegistroProduccionLeche.builder()
         .id(UUID.randomUUID())
-        .litrosLeche(produccion.pesoLeche())
+        .litrosLeche(produccion.volumen())
         .ureaLeche(produccion.ureaLeche())
         .fechaRegistro(produccion.fechaRegistro())
         .phLeche(produccion.phLeche())

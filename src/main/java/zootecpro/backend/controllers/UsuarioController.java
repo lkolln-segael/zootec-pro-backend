@@ -25,6 +25,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import zootecpro.backend.models.Usuario;
+import zootecpro.backend.models.api.ApiResponse;
 import zootecpro.backend.models.dto.usuario.InsertTrabajador;
 import zootecpro.backend.models.dto.usuario.InsertUsuario;
 import zootecpro.backend.models.dto.usuario.LoginUsuario;
@@ -68,10 +69,12 @@ public class UsuarioController {
   }
 
   @PostMapping("/api/users/add")
-  public ResponseEntity<String> insertUsuarioToEstablo(@RequestBody InsertTrabajador trabajador,
+  public ResponseEntity<ApiResponse<String>> insertUsuarioToEstablo(@RequestBody InsertTrabajador trabajador,
       @RequestParam String establoId) {
-    return ResponseEntity.ok(this.usuarioService.insertTrabajador(trabajador,
-        UUID.fromString(establoId)));
+    return ResponseEntity.ok(ApiResponse.<String>builder()
+        .message(this.usuarioService.insertTrabajador(trabajador,
+            UUID.fromString(establoId)))
+        .build());
   }
 
   @PutMapping("/api/users/edit/{usuarioId}")

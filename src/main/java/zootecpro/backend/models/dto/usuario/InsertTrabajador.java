@@ -10,7 +10,7 @@ public class InsertTrabajador {
   private String nombreUsuario;
 
   @JsonProperty("contraseña")
-  private String contrasena;
+  private String contraseña;
 
   private String idRol;
 }

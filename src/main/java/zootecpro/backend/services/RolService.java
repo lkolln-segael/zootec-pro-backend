@@ -14,7 +14,7 @@ public class RolService {
 
   public RolService(RolRepository rolRepository) {
     this.rolRepository = rolRepository;
-    if (rolRepository.count() != 0) {
+    if (rolRepository.count() > 1) {
       return;
     }
     List<Rol> roles = List.of(

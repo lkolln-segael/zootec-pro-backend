@@ -61,6 +61,7 @@ public class EstabloService {
 
   public boolean insertTrabajador(UUID establoId, Usuario usuario) {
     var establoOpt = establoRepository.findById(establoId);
+    IO.println(usuario);
     if (establoOpt.isEmpty()) {
       return false;
     }

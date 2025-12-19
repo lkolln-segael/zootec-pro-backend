@@ -57,18 +57,26 @@ public class EstabloController {
   @GetMapping("/api/establos/list")
   public ResponseEntity<ApiResponse<List<EstabloSimplified>>> getEstablosApi(@RequestParam String userName) {
     List<Establo> establos = establoService.getEstablos();
+    var establosUsuario = establos.stream().filter(establo -> establo.getUsuario().getNombreUsuario().equals(userName))
+        .toList();
+    if (establosUsuario.isEmpty()) {
+      establosUsuario = establos.stream()
+          .filter(establo -> establo.getTrabajadores().stream().anyMatch(t -> t.getNombreUsuario().equals(userName)))
+          .toList();
+    }
     ApiResponse<List<EstabloSimplified>> response = ApiResponse.<List<EstabloSimplified>>builder()
-        .data(establos.stream().filter(establo -> establo.getUsuario().getNombreUsuario().equals(userName))
-            .map(establo -> {
-              return EstabloSimplified.builder()
-                  .id(establo.getId().toString())
-                  .nombre(establo.getNombre())
-                  .ubicacion(establo.getUbicacion())
-                  .sistemaProduccion(establo.getSistemaProduccion())
-                  .capacidadMaxima(establo.getCapacidadMaxima())
-                  .build();
-            })
-            .toList())
+        .data(
+            establosUsuario.stream()
+                .map(establo -> {
+                  return EstabloSimplified.builder()
+                      .id(establo.getId().toString())
+                      .nombre(establo.getNombre())
+                      .ubicacion(establo.getUbicacion())
+                      .sistemaProduccion(establo.getSistemaProduccion())
+                      .capacidadMaxima(establo.getCapacidadMaxima())
+                      .build();
+                })
+                .toList())
         .message("Establos obtenidos correctamente")
         .build();
     return ResponseEntity.ok(response);

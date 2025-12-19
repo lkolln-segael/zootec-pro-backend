@@ -176,6 +176,7 @@ public class UsuarioService implements UserDetailsService {
         .activo(true)
         .nombre(trabajador.getNombre())
         .nombreUsuario(trabajador.getNombreUsuario())
+        .contraseña(encoder.encode(trabajador.getContraseña()))
         .fechaCreacion(LocalDate.now())
         .fechaModificacion(LocalDate.now())
         .rol(rol)
