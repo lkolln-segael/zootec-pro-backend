@@ -10,10 +10,15 @@ import zootecpro.backend.gui.App;
 public class BackendApplication {
 
   public static void main(String[] args) {
-    App app = new App(() -> {
-      return SpringApplication.run(BackendApplication.class, args);
-    });
-    app.start();
+    if (args.length > 0 && args[0].equals("--no-gui")) {
+      SpringApplication.run(BackendApplication.class, args);
+      return;
+    } else {
+      App app = new App(() -> {
+        return SpringApplication.run(BackendApplication.class, args);
+      });
+      app.start();
+    }
   }
 
 }

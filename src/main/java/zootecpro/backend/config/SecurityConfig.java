@@ -33,7 +33,7 @@ public class SecurityConfig {
       http
           .cors(cors -> {
             CorsConfiguration configuration = new CorsConfiguration();
-            configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+            configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "https://zootecpro.com"));
             configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
             configuration
                 .setAllowedHeaders(
@@ -82,7 +82,7 @@ public class SecurityConfig {
       http
           .cors(cors -> {
             CorsConfiguration configuration = new CorsConfiguration();
-            configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+            configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "https://zootecpro.com"));
             configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
             configuration
                 .setAllowedHeaders(

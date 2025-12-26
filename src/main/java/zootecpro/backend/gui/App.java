@@ -2,6 +2,8 @@ package zootecpro.backend.gui;
 
 import java.awt.CardLayout;
 import java.awt.GraphicsEnvironment;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -21,6 +23,7 @@ import java.util.function.Supplier;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import org.springframework.context.ConfigurableApplicationContext;
@@ -38,6 +41,12 @@ public class App extends JFrame {
   private JButton springStartFrontend = new JButton("Iniciar Servidor frontend");
   private JButton springCloseFrontend = new JButton("Cerrar Servidor frontend");
 
+  private JLabel linkFrontend = new JLabel();
+  private JLabel linkBackend = new JLabel();
+
+  private Process processFrontend;
+  private Process processBackend;
+
   private Supplier<ConfigurableApplicationContext> springFunction;
 
   private ConfigurableApplicationContext springContext;
@@ -47,27 +56,44 @@ public class App extends JFrame {
 
   public App(Supplier<ConfigurableApplicationContext> springFunction) {
     super();
+    setTitle("Zootecpro");
+    JPanel content = new JPanel();
+    NavBar navBar = new NavBar();
     GraphicsEnvironment graphicsEnvironment = GraphicsEnvironment.getLocalGraphicsEnvironment();
     Rectangle bounds = graphicsEnvironment.getMaximumWindowBounds();
 
     bounds.width = bounds.width / 4;
     bounds.height = bounds.height / 4;
 
-    GridLayout gridLayout = new GridLayout(3, 2, 10, 10);
+    GridLayout gridLayout = new GridLayout(4, 2, 10, 10);
 
     this.springFunction = springFunction;
 
-    setLayout(gridLayout);
-    add(springLabelState);
-    add(springLabelFrontendState);
+    content.setLayout(gridLayout);
 
-    add(springStartButton, "START");
-    add(springStartFrontend, "START_FRONTEND");
+    content.add(linkBackend);
+    content.add(linkFrontend);
 
-    add(springCloseButton, "CLOSE");
-    add(springCloseFrontend, "CLOSE_FRONTEND");
+    content.add(springLabelState);
+    content.add(springLabelFrontendState);
+
+    content.add(springStartButton, "START");
+    content.add(springStartFrontend, "START_FRONTEND");
+
+    content.add(springCloseButton, "CLOSE");
+    content.add(springCloseFrontend, "CLOSE_FRONTEND");
+
+    GridBagLayout layout = new GridBagLayout();
+    GridBagConstraints constraints = new GridBagConstraints();
+    setLayout(layout);
+
+    constraints.gridx = 0;
+    constraints.gridy = 0;
+    constraints.fill = GridBagConstraints.BOTH;
+    add(content, constraints);
 
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    setJMenuBar(navBar);
     setSize(bounds.width, bounds.height);
   }
 
@@ -76,6 +102,15 @@ public class App extends JFrame {
     this.springStartButton.addActionListener(e -> {
       this.springLabelState.setText("Servidor Backend iniciado");
       this.springContext = this.springFunction.get();
+      ProcessBuilder pb = new ProcessBuilder("powershell.exe", "-Command",
+          "Start-Process", "msedge", "http://localhost:8080/admin/users");
+      pb.inheritIO();
+      try {
+        processBackend = pb.start();
+        linkBackend.setText("http://localhost:8080/admin/users");
+      } catch (IOException e1) {
+        e1.printStackTrace();
+      }
     });
 
     this.springCloseButton.addActionListener(e -> {
@@ -84,6 +119,7 @@ public class App extends JFrame {
       }
       this.springLabelState.setText("Servidor Backend detenido");
       this.springContext.close();
+      processBackend.destroy();
     });
 
     this.springStartFrontend.addActionListener(e -> {
@@ -121,6 +157,11 @@ public class App extends JFrame {
         });
         this.springLabelFrontendState.setText("Servidor Frontend iniciado");
         server.start();
+        ProcessBuilder pb = new ProcessBuilder("powershell.exe", "-Command",
+            "Start-Process", "msedge", "http://localhost:4200");
+        pb.inheritIO();
+        processFrontend = pb.start();
+        linkFrontend.setText("http://localhost:4200");
       } catch (IOException e1) {
         e1.printStackTrace();
       }
@@ -129,6 +170,7 @@ public class App extends JFrame {
     this.springCloseFrontend.addActionListener(e -> {
       this.springLabelFrontendState.setText("Servidor Frontend detenido");
       server.stop(0);
+      processFrontend.destroy();
     });
     SwingUtilities.invokeLater(() -> {
       setVisible(true);
